@@ -9,23 +9,33 @@ set(CMAKE_COLOR_MAKEFILE          OFF)
 add_compile_options(-fsingle-precision-constant)
 add_compile_options(-Wdouble-promotion -Wfloat-conversion -Werror=return-type)
 add_compile_options(-Wno-attributes -Wsign-compare -Wenum-compare -Wno-error=deprecated)
-#add_definitions(-Werror)
+#add_compile_options(-Wno-register)
 
 include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}/log
         ${CMAKE_CURRENT_SOURCE_DIR}/drivers
 )
 
+aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/drivers AUX_SRCS)
+
 # TODO SRC
 add_executable(csg060_fw
-        main.cpp
-        drivers/uart.cpp
-        drivers/uart.h)
+        main.c
+        ${AUX_SRCS}
+)
 
-#add_link_options(-L${SDK_ROOT}/modules/nrfx/mdk)
-add_link_options(-T${CMAKE_SOURCE_DIR}/pca10028/blank/armgcc/uart_gcc_nrf51.ld)
-add_link_options(-Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/csg060_fw.map)
+# !! Important ! need to use target_...
+target_link_options(${PROJECT_NAME} PRIVATE -L${SDK_ROOT}/components/toolchain/gcc)
+target_link_options(${PROJECT_NAME} PRIVATE -T${CMAKE_SOURCE_DIR}/pca10028/blank/armgcc/uart_gcc_nrf51.ld)
+target_link_options(${PROJECT_NAME} PRIVATE -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/csg060_fw.map)
 
-target_link_libraries(${PROJECT_NAME} -Wl,--whole-archive SDK_LIBS -Wl,--no-whole-archive)
+target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--whole-archive SDK_LIBS -Wl,--no-whole-archive)
+target_link_libraries(${PROJECT_NAME} PRIVATE nosys)
+
+if (USE_QEMU)
+target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--defsym=SEGGER_RTT_WriteNoLock=SEGGER_RTT_WriteNoLock_qemu)
+target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--defsym=SEGGER_RTT_WriteSkipNoLock=SEGGER_RTT_WriteSkipNoLock_qemu)
+endif(USE_QEMU)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         BYPRODUCTS ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex ${PROJECT_NAME}.bin

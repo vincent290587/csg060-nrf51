@@ -6,13 +6,14 @@ set(SRC
     ${SDK_ROOT}/components/libraries/log/src/nrf_log_backend_serial.c
     ${SDK_ROOT}/components/libraries/log/src/nrf_log_frontend.c
     ${SDK_ROOT}/components/libraries/util/app_error.c
-    ${SDK_ROOT}/components/libraries/util/app_error_weak.c
     ${SDK_ROOT}/components/libraries/fifo/app_fifo.c
     ${SDK_ROOT}/components/libraries/uart/app_uart_fifo.c
     ${SDK_ROOT}/components/libraries/util/app_util_platform.c
     ${SDK_ROOT}/components/libraries/util/nrf_assert.c
     ${SDK_ROOT}/components/libraries/uart/retarget.c
     ${SDK_ROOT}/components/libraries/util/sdk_errors.c
+    ${SDK_ROOT}/components/libraries/hardfault/nrf51/handler/hardfault_handler_gcc.c
+    ${SDK_ROOT}/components/libraries/hardfault/hardfault_implementation.c
     ${SDK_ROOT}/components/boards/boards.c
     ${SDK_ROOT}/components/drivers_nrf/common/nrf_drv_common.c
     ${SDK_ROOT}/components/drivers_nrf/uart/nrf_drv_uart.c
@@ -21,6 +22,7 @@ set(SRC
     ${SDK_ROOT}/external/segger_rtt/SEGGER_RTT_printf.c
     ${SDK_ROOT}/components/toolchain/gcc/gcc_startup_nrf51.S
     ${SDK_ROOT}/components/toolchain/system_nrf51.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/qemu_rtt.c
 )
 
 add_library(SDK_LIBS ${SRC})

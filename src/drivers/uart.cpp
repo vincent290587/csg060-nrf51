@@ -17,7 +17,7 @@
 #define UART_TX_BUF_SIZE 128
 
 
-void uart_error_handle(app_uart_evt_t * p_event)
+extern "C" void uart_error_handle(app_uart_evt_t * p_event)
 {
     if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR)
     {
@@ -61,7 +61,6 @@ void uart_init(void) {
 
         if (cr == 'q' || cr == 'Q')
         {
-            printf(" \r\nExit!\r\n");
 
             while (true)
             {

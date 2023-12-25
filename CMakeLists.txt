@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.27)
 project(csg060 VERSION 0.0.1)
 
-set(CMAKE_CXX_STANDARD 20)
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_C_STANDARD 11)
 
 message(STATUS "Project version: ${CMAKE_PROJECT_VERSION}")
 
 set(USE_SOFTDEVICE                OFF)
-set(USE_QEMU                      OFF)
+set(USE_QEMU                      ON)
 
 if (USE_QEMU)
     add_definitions(-DNRF_LOG_BACKEND_RTT_ENABLED=1)
