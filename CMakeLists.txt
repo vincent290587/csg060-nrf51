@@ -13,7 +13,6 @@ if (USE_QEMU)
     add_definitions(-DNRF_LOG_BACKEND_RTT_ENABLED=1)
     add_definitions(-DNRF_LOG_BACKEND_UART_ENABLED=0)
     add_definitions(-DNRF_LOG_USES_COLORS=0)
-    add_definitions(-DNRF_LOG_DEFAULT_LEVEL=3)
     add_definitions(-DNRF_USE_QEMU)
 
     set(USE_SOFTDEVICE                OFF)

@@ -10,14 +10,15 @@ target_include_directories(csg060_config SYSTEM INTERFACE
 
 
 if (CMAKE_BUILD_TYPE STREQUAL "Release" OR USE_SYSTEMVIEW)
-    target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_ENABLED=0)
-    target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_DEFAULT_LEVEL=2)
+    target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_ENABLED=1)
+    target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_DEFAULT_LEVEL=0)
+    target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_DEFERRED=0)
     message(STATUS "NRF_LOG_ENABLED=0")
 else()
     message(STATUS "NRF_LOG_ENABLED=1")
     target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_ENABLED=1)
     target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_DEFERRED=0)
-    #    target_compile_definitions(csg060_config INTERFACE -DNRFX_WDT_ENABLED=0)
+    target_compile_definitions(csg060_config INTERFACE -DNRF_LOG_DEFAULT_LEVEL=3)
     target_compile_definitions(csg060_config INTERFACE -DDEBUG -DDEBUG_NRF -DDEBUG_NRF_USER)
 endif()
 
