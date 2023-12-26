@@ -29,7 +29,6 @@
 const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(0); /**< Declaring an instance of nrf_drv_rtc for RTC0. */
 
 
-
 /** @brief: Function for handling the RTC0 interrupts.
  * Triggered on TICK and COMPARE0 match.
  */
@@ -77,10 +76,6 @@ static void rtc_config(void)
     nrf_drv_rtc_overflow_enable(&rtc, true);
 
     //Power on RTC instance
-    nrf_drv_rtc_enable(&rtc);
-
-    nrf_drv_rtc_disable(&rtc);
-
     nrf_drv_rtc_enable(&rtc);
 }
 
