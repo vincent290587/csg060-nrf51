@@ -24,6 +24,10 @@
 #define UART_RX_BUF_SIZE 32u
 #define UART_TX_BUF_SIZE 32u
 
+#define UART_PASSTHROUGH 0
+
+#define UART_RECV_TIMEOUT_MS    ((os_time_t)10)
+#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)30000)
 
 uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
@@ -39,18 +43,45 @@ void uart_error_handle(app_uart_evt_t * p_event)
     }
 }
 
+enum {
+    CSG060_CMD__REQUEST = 0x11,
+    CSG060_CMD__SET_VALUE = 0x16,
+};
+
+enum {
+    CSG060_ARG__MAX_RPM = 0x1F,
+    CSG060_ARG__WHEEL_RPM = 0x20,
+};
+
 static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
 
-    // TODO handle packet
+#if UART_PASSTHROUGH
+    app_uart_put_buffer(p_buffer, length);
+#else
 
+    struct {
+        uint8_t cmd;
+        uint8_t arg;
+        uint8_t payload[length-2];
+    } * const p_data = (void*)p_buffer;
 
-    uint8_t chain[12] = {'h', 'e', 'l'};
-    app_uart_put_buffer(chain, sizeof(chain));
+    NRF_LOG_INFO("Received controller data:\n");
+    NRF_LOG_HEXDUMP_INFO(p_buffer, length);
 
+    NRF_LOG_DEBUG("cmd: 0x%02X arg 0x%02X\n", p_data->cmd, p_data->arg);
+
+    // handle MAX_RPM packet
+    if (p_data->cmd == CSG060_CMD__SET_VALUE && p_data->arg == CSG060_ARG__MAX_RPM) {
+        NRF_LOG_INFO("MAX RPM command detected: upgrading speed\n");
+        const uint8_t new_buffer[] = {CSG060_CMD__SET_VALUE, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27};
+        ret_code_t err_code = app_uart_put_buffer(new_buffer, sizeof(new_buffer));
+        APP_ERROR_CHECK(err_code);
+    } else {
+        ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
+        APP_ERROR_CHECK(err_code);
+    }
+#endif
 }
-
-#define UART_RECV_TIMEOUT_MS    ((os_time_t)10)
-#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)5000)
 
 void uart_init(void) {
 
