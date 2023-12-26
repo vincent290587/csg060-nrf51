@@ -29,7 +29,7 @@
 #define UART_RECV_TIMEOUT_MS    ((os_time_t)10)
 #define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)30000)
 
-uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
+extern uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
 void uart_error_handle(app_uart_evt_t * p_event)
 {
@@ -95,7 +95,7 @@ void uart_init(void) {
         5,
         6,
         7,
-        APP_UART_FLOW_CONTROL_ENABLED,
+        APP_UART_FLOW_CONTROL_DISABLED,
         false,
         UART_BAUDRATE_BAUDRATE_Baud1200
     };
