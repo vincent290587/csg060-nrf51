@@ -9,11 +9,16 @@
 #include "boards.h"
 #include "uart.h"
 #include "app_error.h"
+#include "nrf_gpio.h"
+#include "nrf_gpiote.h"
+#include "nrf_drv_gpiote.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
 #include "os_time.h"
+
+#define WAKE_PIN 6
 
 /**
  * Function is implemented as weak so that it can be overwritten by custom application error handler
@@ -42,15 +47,27 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * file_name)
     UNUSED_VARIABLE(assert_info);
 }
 
+static uint32_t _wakeup_prepare(void) { // configure new interrupt
 
-static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event);
+    nrf_drv_gpiote_in_config_t in_config;
+    in_config.is_watcher = false;
+    in_config.hi_accuracy = true;
+    in_config.pull = NRF_GPIO_PIN_PULLUP;
+    in_config.sense = NRF_GPIOTE_POLARITY_HITOLO;
 
-NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
+    ret_code_t err_code = nrf_drv_gpiote_in_init(WAKE_PIN, &in_config, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_gpiote_in_event_enable(WAKE_PIN, true);
+
+    nrf_gpio_cfg_sense_input(WAKE_PIN, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
+    return err_code;
+}
 
 /**
  * @brief Handler for shutdown preparation.
  */
-bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
+static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 {
 
     switch (event)
@@ -61,8 +78,7 @@ bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 
         case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP: {
             NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_WAKEUP\n");
-            uint32_t err_code = 0;
-            // TODO GPIOTE
+            uint32_t err_code = _wakeup_prepare();
             APP_ERROR_CHECK(err_code);
         }
         break;
@@ -75,6 +91,8 @@ bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 
     return true;
 }
+
+NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
 
 /**@brief Function for handling HardFault.
  */
@@ -101,6 +119,9 @@ int main(void)
     NRF_LOG_INIT(os_get_millis);
 
     NRF_LOG_INFO("Hello CSG060\n");
+
+    const ret_code_t err_code = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(err_code);
 
     uart_init();
 

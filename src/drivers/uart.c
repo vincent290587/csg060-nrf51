@@ -111,14 +111,10 @@ void uart_init(void) {
 
 }
 
-static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event);
-
-NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
-
 /**
  * @brief Handler for shutdown preparation.
  */
-bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
+static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 {
     uint32_t err_code;
 
@@ -138,3 +134,5 @@ bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 
     return true;
 }
+
+NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
