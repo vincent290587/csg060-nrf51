@@ -3,6 +3,9 @@ project(SDK_LIBS LANGUAGES C ASM)
 
 
 set(SRC
+    ${SDK_ROOT}/components/drivers_nrf/clock/nrf_drv_clock.c
+    ${SDK_ROOT}/components/drivers_nrf/common/nrf_drv_common.c
+    ${SDK_ROOT}/components/drivers_nrf/rtc/nrf_drv_rtc.c
     ${SDK_ROOT}/components/libraries/log/src/nrf_log_backend_serial.c
     ${SDK_ROOT}/components/libraries/log/src/nrf_log_frontend.c
     ${SDK_ROOT}/components/libraries/util/app_error.c
@@ -11,6 +14,7 @@ set(SRC
     ${SDK_ROOT}/components/libraries/util/nrf_assert.c
     ${SDK_ROOT}/components/libraries/uart/retarget.c
     ${SDK_ROOT}/components/libraries/util/sdk_errors.c
+    ${SDK_ROOT}/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c
     ${SDK_ROOT}/components/libraries/hardfault/nrf51/handler/hardfault_handler_gcc.c
     ${SDK_ROOT}/components/libraries/hardfault/hardfault_implementation.c
     ${SDK_ROOT}/components/boards/boards.c
@@ -27,6 +31,11 @@ set(SRC
 add_library(SDK_LIBS ${SRC})
 
 target_include_directories(SDK_LIBS PUBLIC
+    ${SDK_ROOT}/components/drivers_nrf/clock
+    ${SDK_ROOT}/components/drivers_nrf/common
+    ${SDK_ROOT}/components/drivers_nrf/rtc
+    ${SDK_ROOT}/components/libraries/pwr_mgmt
+    ${SDK_ROOT}/components/libraries/experimental_section_vars
     ${SDK_ROOT}/components
     ${SDK_ROOT}/components/libraries/util
     ${SDK_ROOT}/components/toolchain/gcc

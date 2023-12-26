@@ -515,6 +515,346 @@
 #endif
 
 
+//==========================================================
+// <e> CLOCK_ENABLED - nrf_drv_clock - CLOCK peripheral driver
+//==========================================================
+#ifndef CLOCK_ENABLED
+#define CLOCK_ENABLED 1
+#endif
+#if  CLOCK_ENABLED
+// <o> CLOCK_CONFIG_XTAL_FREQ  - HF XTAL Frequency
+
+// <0=> Default (64 MHz)
+// <255=> Default (16 MHz)
+// <0=> 32 MHz
+
+#ifndef CLOCK_CONFIG_XTAL_FREQ
+#define CLOCK_CONFIG_XTAL_FREQ 0
+#endif
+
+// <o> CLOCK_CONFIG_LF_SRC  - LF Clock Source
+
+// <0=> RC
+// <1=> XTAL
+// <2=> Synth
+
+#ifndef CLOCK_CONFIG_LF_SRC
+#define CLOCK_CONFIG_LF_SRC 0
+#endif
+
+// <o> CLOCK_CONFIG_IRQ_PRIORITY  - Interrupt priority
+
+
+// <i> Priorities 0,2 (nRF51) and 0,1,4,5 (nRF52) are reserved for SoftDevice
+// <0=> 0 (highest)
+// <1=> 1
+// <2=> 2
+// <3=> 3
+
+#ifndef CLOCK_CONFIG_IRQ_PRIORITY
+#define CLOCK_CONFIG_IRQ_PRIORITY 3
+#endif
+
+// <e> CLOCK_CONFIG_LOG_ENABLED - Enables logging in the module.
+//==========================================================
+#ifndef CLOCK_CONFIG_LOG_ENABLED
+#define CLOCK_CONFIG_LOG_ENABLED 0
+#endif
+#if  CLOCK_CONFIG_LOG_ENABLED
+// <o> CLOCK_CONFIG_LOG_LEVEL  - Default Severity level
+
+// <0=> Off
+// <1=> Error
+// <2=> Warning
+// <3=> Info
+// <4=> Debug
+
+#ifndef CLOCK_CONFIG_LOG_LEVEL
+#define CLOCK_CONFIG_LOG_LEVEL 3
+#endif
+
+// <o> CLOCK_CONFIG_INFO_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef CLOCK_CONFIG_INFO_COLOR
+#define CLOCK_CONFIG_INFO_COLOR 0
+#endif
+
+// <o> CLOCK_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef CLOCK_CONFIG_DEBUG_COLOR
+#define CLOCK_CONFIG_DEBUG_COLOR 0
+#endif
+
+#endif //CLOCK_CONFIG_LOG_ENABLED
+// </e>
+
+#endif //CLOCK_ENABLED
+// </e>
+
+
+// <e> RTC_ENABLED - nrf_drv_rtc - RTC peripheral driver
+//==========================================================
+#ifndef RTC_ENABLED
+#define RTC_ENABLED 1
+#endif
+#if  RTC_ENABLED
+// <o> RTC_DEFAULT_CONFIG_FREQUENCY - Frequency  <16-32768>
+
+
+#ifndef RTC_DEFAULT_CONFIG_FREQUENCY
+#define RTC_DEFAULT_CONFIG_FREQUENCY 32768
+#endif
+
+// <q> RTC_DEFAULT_CONFIG_RELIABLE  - Ensures safe compare event triggering
+
+
+#ifndef RTC_DEFAULT_CONFIG_RELIABLE
+#define RTC_DEFAULT_CONFIG_RELIABLE 0
+#endif
+
+// <o> RTC_DEFAULT_CONFIG_IRQ_PRIORITY  - Interrupt priority
+
+
+// <i> Priorities 0,2 (nRF51) and 0,1,4,5 (nRF52) are reserved for SoftDevice
+// <0=> 0 (highest)
+// <1=> 1
+// <2=> 2
+// <3=> 3
+
+#ifndef RTC_DEFAULT_CONFIG_IRQ_PRIORITY
+#define RTC_DEFAULT_CONFIG_IRQ_PRIORITY 3
+#endif
+
+// <q> RTC0_ENABLED  - Enable RTC0 instance
+
+
+#ifndef RTC0_ENABLED
+#define RTC0_ENABLED 1
+#endif
+
+// <q> RTC1_ENABLED  - Enable RTC1 instance
+
+
+#ifndef RTC1_ENABLED
+#define RTC1_ENABLED 0
+#endif
+
+// <q> RTC2_ENABLED  - Enable RTC2 instance
+
+
+#ifndef RTC2_ENABLED
+#define RTC2_ENABLED 0
+#endif
+
+// <o> NRF_MAXIMUM_LATENCY_US - Maximum possible time[us] in highest priority interrupt
+#ifndef NRF_MAXIMUM_LATENCY_US
+#define NRF_MAXIMUM_LATENCY_US 2000
+#endif
+
+// <e> RTC_CONFIG_LOG_ENABLED - Enables logging in the module.
+//==========================================================
+#ifndef RTC_CONFIG_LOG_ENABLED
+#define RTC_CONFIG_LOG_ENABLED 0
+#endif
+#if  RTC_CONFIG_LOG_ENABLED
+// <o> RTC_CONFIG_LOG_LEVEL  - Default Severity level
+
+// <0=> Off
+// <1=> Error
+// <2=> Warning
+// <3=> Info
+// <4=> Debug
+
+#ifndef RTC_CONFIG_LOG_LEVEL
+#define RTC_CONFIG_LOG_LEVEL 3
+#endif
+
+// <o> RTC_CONFIG_INFO_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef RTC_CONFIG_INFO_COLOR
+#define RTC_CONFIG_INFO_COLOR 0
+#endif
+
+// <o> RTC_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef RTC_CONFIG_DEBUG_COLOR
+#define RTC_CONFIG_DEBUG_COLOR 0
+#endif
+
+#endif //RTC_CONFIG_LOG_ENABLED
+// </e>
+
+#endif //RTC_ENABLED
+// </e>
+
+
+// <e> NRF_PWR_MGMT_ENABLED - nrf_pwr_mgmt - Power management module
+//==========================================================
+#ifndef NRF_PWR_MGMT_ENABLED
+#define NRF_PWR_MGMT_ENABLED 1
+#endif
+#if  NRF_PWR_MGMT_ENABLED
+// <e> NRF_PWR_MGMT_CONFIG_LOG_ENABLED - Enables logging in the module.
+//==========================================================
+#ifndef NRF_PWR_MGMT_CONFIG_LOG_ENABLED
+#define NRF_PWR_MGMT_CONFIG_LOG_ENABLED 1
+#endif
+#if  NRF_PWR_MGMT_CONFIG_LOG_ENABLED
+// <o> NRF_PWR_MGMT_CONFIG_LOG_LEVEL  - Default Severity level
+
+// <0=> Off
+// <1=> Error
+// <2=> Warning
+// <3=> Info
+// <4=> Debug
+
+#ifndef NRF_PWR_MGMT_CONFIG_LOG_LEVEL
+#define NRF_PWR_MGMT_CONFIG_LOG_LEVEL 4
+#endif
+
+// <o> NRF_PWR_MGMT_CONFIG_INFO_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef NRF_PWR_MGMT_CONFIG_INFO_COLOR
+#define NRF_PWR_MGMT_CONFIG_INFO_COLOR 0
+#endif
+
+// <o> NRF_PWR_MGMT_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef NRF_PWR_MGMT_CONFIG_DEBUG_COLOR
+#define NRF_PWR_MGMT_CONFIG_DEBUG_COLOR 0
+#endif
+
+#endif //NRF_PWR_MGMT_CONFIG_LOG_ENABLED
+// </e>
+
+// <e> NRF_PWR_MGMT_CONFIG_DEBUG_PIN_ENABLED - Enables pin debug in the module.
+
+// <i> Selected pin will be set when CPU is in sleep mode.
+//==========================================================
+#ifndef NRF_PWR_MGMT_CONFIG_DEBUG_PIN_ENABLED
+#define NRF_PWR_MGMT_CONFIG_DEBUG_PIN_ENABLED 0
+#endif
+#if  NRF_PWR_MGMT_CONFIG_DEBUG_PIN_ENABLED
+// <o> NRF_PWR_MGMT_SLEEP_DEBUG_PIN - Pin number  <0-31>
+
+
+#ifndef NRF_PWR_MGMT_SLEEP_DEBUG_PIN
+#define NRF_PWR_MGMT_SLEEP_DEBUG_PIN 31
+#endif
+
+#endif //NRF_PWR_MGMT_CONFIG_DEBUG_PIN_ENABLED
+// </e>
+
+// <q> NRF_PWR_MGMT_CONFIG_CPU_USAGE_MONITOR_ENABLED  - Enables CPU usage monitor.
+
+
+// <i> Module will trace percentage of CPU usage in one second intervals.
+
+#ifndef NRF_PWR_MGMT_CONFIG_CPU_USAGE_MONITOR_ENABLED
+#define NRF_PWR_MGMT_CONFIG_CPU_USAGE_MONITOR_ENABLED 0
+#endif
+
+// <e> NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_ENABLED - Enable standby timeout.
+//==========================================================
+#ifndef NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_ENABLED
+#define NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_ENABLED 0
+#endif
+#if  NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_ENABLED
+// <o> NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_S - Standby timeout (in seconds).
+// <i> Shutdown procedure will begin no earlier than after this number of seconds.
+
+#ifndef NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_S
+#define NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_S 3
+#endif
+
+#endif //NRF_PWR_MGMT_CONFIG_STANDBY_TIMEOUT_ENABLED
+// </e>
+
+// <q> NRF_PWR_MGMT_CONFIG_FPU_SUPPORT_ENABLED  - Enables FPU event cleaning.
+
+
+#ifndef NRF_PWR_MGMT_CONFIG_FPU_SUPPORT_ENABLED
+#define NRF_PWR_MGMT_CONFIG_FPU_SUPPORT_ENABLED 0
+#endif
+
+// <q> NRF_PWR_MGMT_CONFIG_AUTO_SHUTDOWN_RETRY  - Blocked shutdown procedure will be retried every second.
+
+
+#ifndef NRF_PWR_MGMT_CONFIG_AUTO_SHUTDOWN_RETRY
+#define NRF_PWR_MGMT_CONFIG_AUTO_SHUTDOWN_RETRY 0
+#endif
+
+// <q> NRF_PWR_MGMT_CONFIG_USE_SCHEDULER  - Module will use @ref app_scheduler.
+
+
+#ifndef NRF_PWR_MGMT_CONFIG_USE_SCHEDULER
+#define NRF_PWR_MGMT_CONFIG_USE_SCHEDULER 0
+#endif
+
+#endif //NRF_PWR_MGMT_ENABLED
+// </e>
+
+
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
 
