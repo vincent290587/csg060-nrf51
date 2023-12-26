@@ -7,6 +7,7 @@ set(SRC
     ${SDK_ROOT}/components/drivers_nrf/clock/nrf_drv_clock.c
     ${SDK_ROOT}/components/drivers_nrf/common/nrf_drv_common.c
     ${SDK_ROOT}/components/drivers_nrf/rtc/nrf_drv_rtc.c
+    ${SDK_ROOT}/components/drivers_nrf/wdt/nrf_drv_wdt.c
     ${SDK_ROOT}/components/libraries/log/src/nrf_log_backend_serial.c
     ${SDK_ROOT}/components/libraries/log/src/nrf_log_frontend.c
     ${SDK_ROOT}/components/libraries/util/app_error.c
@@ -36,6 +37,7 @@ target_include_directories(SDK_LIBS PUBLIC
     ${SDK_ROOT}/components/drivers_nrf/clock
     ${SDK_ROOT}/components/drivers_nrf/common
     ${SDK_ROOT}/components/drivers_nrf/rtc
+    ${SDK_ROOT}/components/drivers_nrf/wdt
     ${SDK_ROOT}/components/libraries/pwr_mgmt
     ${SDK_ROOT}/components/libraries/experimental_section_vars
     ${SDK_ROOT}/components

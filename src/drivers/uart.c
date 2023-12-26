@@ -83,18 +83,17 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
 #endif
 }
 
-void uart_init(void) {
+void uart_init(p_wait_func_t pFunc) {
 
     ret_code_t err_code;
     os_time_t last_recv = 0;
     os_time_t last_recv_off = 0;
 
-    const app_uart_comm_params_t comm_params =
-      {
+    const app_uart_comm_params_t comm_params = {
         4, // TODO
         5,
-        6,
-        7,
+        NRF_UART_PSEL_DISCONNECTED,
+        NRF_UART_PSEL_DISCONNECTED,
         APP_UART_FLOW_CONTROL_DISABLED,
         false,
         UART_BAUDRATE_BAUDRATE_Baud1200
@@ -133,10 +132,9 @@ void uart_init(void) {
 
         if (cur_time - last_recv_off > UART_SYSOFF_TIMEOUT_MS)
         {
-            NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
-            nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
+            return;
         } else {
-            nrf_pwr_mgmt_run();
+            pFunc();
         }
     }
 

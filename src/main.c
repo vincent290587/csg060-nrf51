@@ -11,6 +11,7 @@
 #include "app_error.h"
 #include "nrf_gpio.h"
 #include "nrf_gpiote.h"
+#include "nrf_drv_wdt.h"
 #include "nrf_drv_gpiote.h"
 #include "nrf_pwr_mgmt.h"
 #include "nrf_log.h"
@@ -19,6 +20,9 @@
 #include "os_time.h"
 
 #define WAKE_PIN 6
+
+
+nrf_drv_wdt_channel_id m_channel_id;
 
 /**
  * Function is implemented as weak so that it can be overwritten by custom application error handler
@@ -110,9 +114,33 @@ void HardFault_process(HardFault_stack_t *p_stack)
     }
 }
 
+/**
+ * @brief WDT events handler.
+ */
+static void wdt_event_handler(void) {
+
+}
+
+static void _wdt_enable(void) {
+
+    //Configure WDT.
+    ret_code_t err_code;
+    nrf_drv_wdt_config_t config = NRF_DRV_WDT_DEAFULT_CONFIG;
+    err_code = nrf_drv_wdt_init(&config, wdt_event_handler);
+    APP_ERROR_CHECK(err_code);
+    err_code = nrf_drv_wdt_channel_alloc(&m_channel_id);
+    APP_ERROR_CHECK(err_code);
+    nrf_drv_wdt_enable();
+}
+
+static void _wait_func(void) {
+    nrf_drv_wdt_channel_feed(m_channel_id);
+    nrf_pwr_mgmt_run();
+}
 
 int main(void)
 {
+    _wdt_enable();
 
     os_time__init();
 
@@ -123,9 +151,13 @@ int main(void)
     const ret_code_t err_code = nrf_drv_gpiote_init();
     APP_ERROR_CHECK(err_code);
 
-    uart_init();
+    uart_init(_wait_func);
 
-    ASSERT(0);
+    NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
+    nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
+    while (true) {
+        nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_CONTINUE);
+    }
 
     return 0;
 }

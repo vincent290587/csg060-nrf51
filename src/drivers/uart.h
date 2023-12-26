@@ -9,7 +9,9 @@
 extern "C" {
 #endif
 
-void uart_init(void);
+typedef void (*p_wait_func_t)(void);
+
+void uart_init(p_wait_func_t pFunc);
 
 #ifdef __cplusplus
 }
