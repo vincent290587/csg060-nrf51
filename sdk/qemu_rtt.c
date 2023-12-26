@@ -90,7 +90,7 @@ unsigned SEGGER_RTT_WriteNoLock_qemu(unsigned BufferIndex, const void* pBuffer, 
 // -chardev id=char0,logfile=serial.log,signal=off -serial chardev:char0
 // -chardev socket,id=s0,host=localhost,server,nowait,port=19111 -serial chardev:s0
 unsigned SEGGER_RTT_WriteSkipNoLock_qemu(unsigned BufferIndex, const void* pBuffer, unsigned NumBytes) {
-    return SEGGER_RTT_WriteNoLock(BufferIndex, pBuffer, NumBytes);
+    return SEGGER_RTT_WriteNoLock_qemu(BufferIndex, pBuffer, NumBytes);
 }
 
 #endif

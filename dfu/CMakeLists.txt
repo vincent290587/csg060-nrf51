@@ -1,44 +1,41 @@
 cmake_minimum_required(VERSION 3.27)
-project(csg060_fw)
+project(csg060_dfu)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE        OFF)
 set(CMAKE_COLOR_MAKEFILE          OFF)
 
 
+add_compile_options(-fomit-frame-pointer)
 add_compile_options(-fsingle-precision-constant)
 add_compile_options(-Wdouble-promotion -Wfloat-conversion -Werror=return-type)
 add_compile_options(-Wno-attributes -Wsign-compare -Wenum-compare -Wno-error=deprecated)
-#add_compile_options(-Wno-register)
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_CURRENT_SOURCE_DIR}/log
-        ${CMAKE_CURRENT_SOURCE_DIR}/drivers
 )
 
-aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/drivers AUX_SRCS)
-
-# TODO SRC
-add_executable(csg060_fw
+add_executable(${PROJECT_NAME}
         main.c
-        os_time.c
-        ${AUX_SRCS}
+        dfu-cc.pb.c
+        dfu_req_handling.c
+        vault/pk.c
 )
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config)
+
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/sdk)
 
 # !! Important ! need to use target_...
 target_link_options(${PROJECT_NAME} PRIVATE -L${SDK_ROOT}/components/toolchain/gcc)
-target_link_options(${PROJECT_NAME} PRIVATE -T${CMAKE_SOURCE_DIR}/pca10028/blank/armgcc/uart_gcc_nrf51.ld)
-target_link_options(${PROJECT_NAME} PRIVATE -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/csg060_fw.map)
+target_link_options(${PROJECT_NAME} PRIVATE -L${SDK_ROOT}/external/micro-ecc/nrf51_armgcc/armgcc)
+target_link_options(${PROJECT_NAME} PRIVATE -T${CMAKE_CURRENT_SOURCE_DIR}/secure_dfu_gcc_nrf51.ld)
+target_link_options(${PROJECT_NAME} PRIVATE -Wl,-Map=${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.map)
 
-target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--whole-archive SDK_LIBS -Wl,--no-whole-archive)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDK_DFU)
 target_link_libraries(${PROJECT_NAME} PRIVATE --specs=nano.specs)
 target_link_libraries(${PROJECT_NAME} PRIVATE nosys)
-
-if (USE_QEMU)
-target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--defsym=SEGGER_RTT_WriteNoLock=SEGGER_RTT_WriteNoLock_qemu)
-target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--defsym=SEGGER_RTT_WriteSkipNoLock=SEGGER_RTT_WriteSkipNoLock_qemu)
-endif(USE_QEMU)
+target_link_libraries(${PROJECT_NAME} PRIVATE -l:micro_ecc_lib_nrf51.a)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         BYPRODUCTS ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex ${PROJECT_NAME}.bin
@@ -66,13 +63,11 @@ if(NOT NRFUTIL)
     message(FATAL_ERROR "nrfutil not found, not able to create DFU packages of connectivity firmware.")
 endif()
 
-if (NOT USE_SOFTDEVICE)
-    add_custom_target(flash
-            DEPENDS ${PROJECT_NAME}.hex
-            # Build app first
-            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
-            #Then program
-            COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase
-            COMMAND ${NRFJPROG} --reset -f nrf51 # TODO
-    )
-endif(NOT USE_SOFTDEVICE)
+add_custom_target(flash_dfu
+        DEPENDS ${PROJECT_NAME}.hex
+        # Build app first
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+        #Then program
+        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase
+        COMMAND ${NRFJPROG} --reset -f nrf51
+)

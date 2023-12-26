@@ -27,4 +27,6 @@ add_subdirectory(sdk/)
 
 add_subdirectory(src/)
 
+add_subdirectory(dfu/)
+
 file( GENERATE OUTPUT "${CMAKE_BINARY_DIR}/.gitignore" CONTENT "*" )
