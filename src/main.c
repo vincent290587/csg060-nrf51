@@ -13,15 +13,7 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
-#include "nrf_drv_rtc.h"
-#include "nrf_drv_clock.h"
-
-#define TICK_FREQ              10uL
-
-#define RTC_PRESCALER          ((RTC_DEFAULT_CONFIG_FREQUENCY + (TICK_FREQ >> 1)) / TICK_FREQ) // rounded number
-
-
-const nrf_drv_rtc_t rtc = NRF_DRV_RTC_INSTANCE(0); /**< Declaring an instance of nrf_drv_rtc for RTC0. */
+#include "os_time.h"
 
 /**
  * Function is implemented as weak so that it can be overwritten by custom application error handler
@@ -51,6 +43,39 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * file_name)
 }
 
 
+static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event);
+
+NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
+
+/**
+ * @brief Handler for shutdown preparation.
+ */
+bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
+{
+
+    switch (event)
+    {
+        case NRF_PWR_MGMT_EVT_PREPARE_SYSOFF:
+            NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_SYSOFF\n");
+        break;
+
+        case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP: {
+            NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_WAKEUP\n");
+            uint32_t err_code = 0;
+            // TODO GPIOTE
+            APP_ERROR_CHECK(err_code);
+        }
+        break;
+
+        case NRF_PWR_MGMT_EVT_PREPARE_DFU:
+            NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_DFU\n");
+            APP_ERROR_HANDLER(NRF_ERROR_API_NOT_IMPLEMENTED);
+        break;
+    }
+
+    return true;
+}
+
 /**@brief Function for handling HardFault.
  */
 void HardFault_process(HardFault_stack_t *p_stack)
@@ -67,115 +92,19 @@ void HardFault_process(HardFault_stack_t *p_stack)
     }
 }
 
-static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event);
-
-NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
-
-/**
- * @brief Handler for shutdown preparation.
- */
-bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
-{
-    uint32_t err_code;
-
-    switch (event)
-    {
-        case NRF_PWR_MGMT_EVT_PREPARE_SYSOFF:
-            NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_SYSOFF\n");
-            // err_code = bsp_buttons_disable();
-            nrf_drv_rtc_disable(&rtc);
-            APP_ERROR_CHECK(err_code);
-        break;
-
-        case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
-            NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_WAKEUP\n");
-            // err_code = bsp_wakeup_button_enable(BTN_ID_WAKEUP);
-            APP_ERROR_CHECK(err_code);
-        break;
-
-        case NRF_PWR_MGMT_EVT_PREPARE_DFU:
-            NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_DFU\n");
-            APP_ERROR_HANDLER(NRF_ERROR_API_NOT_IMPLEMENTED);
-        break;
-    }
-
-    return true;
-}
-
-
-/** @brief: Function for handling the RTC0 interrupts.
- * Triggered on TICK and COMPARE0 match.
- */
-static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
-{
-    if (int_type == NRF_DRV_RTC_INT_COMPARE0)
-    {
-        NRF_LOG_INFO("NRF_DRV_RTC_INT_COMPARE0\n");
-    }
-    else if (int_type == NRF_DRV_RTC_INT_TICK)
-    {
-        NRF_LOG_INFO("NRF_DRV_RTC_INT_TICK\n");
-    }
-    else if (int_type == NRF_DRV_RTC_INT_OVERFLOW)
-    {
-        NRF_LOG_INFO("NRF_DRV_RTC_INT_TICK\n");
-    }
-}
-
-/** @brief Function starting the internal LFCLK XTAL oscillator.
- */
-static void lfclk_config(void)
-{
-    ret_code_t err_code = nrf_drv_clock_init();
-    APP_ERROR_CHECK(err_code);
-
-    nrf_drv_clock_lfclk_request(NULL);
-}
-
-/** @brief Function initialization and configuration of RTC driver instance.
- */
-static void rtc_config(void)
-{
-    uint32_t err_code;
-
-    //Initialize RTC instance
-    nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
-    config.prescaler = RTC_PRESCALER - 1;
-    err_code = nrf_drv_rtc_init(&rtc, &config, rtc_handler);
-    APP_ERROR_CHECK(err_code);
-
-    //Enable tick event & interrupt
-    nrf_drv_rtc_tick_enable(&rtc, true);
-
-    nrf_drv_rtc_overflow_enable(&rtc, false);
-
-    //Power on RTC instance
-    nrf_drv_rtc_enable(&rtc);
-
-    nrf_drv_rtc_disable(&rtc);
-
-    nrf_drv_rtc_enable(&rtc);
-}
 
 int main(void)
 {
-    lfclk_config();
 
-    rtc_config();
+    os_time__init();
 
-    NRF_LOG_INIT(NULL);
+    NRF_LOG_INIT(os_get_millis);
 
-    NRF_LOG_INFO("Hello world\n");
+    NRF_LOG_INFO("Hello CSG060\n");
 
-    //uart_init();
+    uart_init();
 
-    nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
-
-    // This part of the example is just for testing the loopback .
-    while (true)
-    {
-        nrf_pwr_mgmt_run();
-    }
+    ASSERT(0);
 
     return 0;
 }

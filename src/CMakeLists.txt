@@ -12,6 +12,7 @@ add_compile_options(-Wno-attributes -Wsign-compare -Wenum-compare -Wno-error=dep
 #add_compile_options(-Wno-register)
 
 include_directories(
+        ${CMAKE_CURRENT_SOURCE_DIR}
         ${CMAKE_CURRENT_SOURCE_DIR}/log
         ${CMAKE_CURRENT_SOURCE_DIR}/drivers
 )
@@ -21,6 +22,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/drivers AUX_SRCS)
 # TODO SRC
 add_executable(csg060_fw
         main.c
+        os_time.c
         ${AUX_SRCS}
 )
 
