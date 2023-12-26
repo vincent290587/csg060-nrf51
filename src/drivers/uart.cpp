@@ -4,6 +4,7 @@
 
 #include "uart.h"
 
+#include <nrf_drv_uart.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -11,11 +12,14 @@
 #include "app_uart.h"
 #include "app_error.h"
 #include "nrf.h"
+#include "nrf_delay.h"
 
 
-#define UART_RX_BUF_SIZE 128
-#define UART_TX_BUF_SIZE 128
+#define UART_RX_BUF_SIZE 32u
+#define UART_TX_BUF_SIZE 32u
 
+
+extern "C" uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
 extern "C" void uart_error_handle(app_uart_evt_t * p_event)
 {
@@ -55,9 +59,18 @@ void uart_init(void) {
 
     while (true)
     {
-        uint8_t cr;
-        while (app_uart_get(&cr) != NRF_SUCCESS);
-        while (app_uart_put(cr) != NRF_SUCCESS);
+        uint8_t cr = 'h';
+        //while (app_uart_get(&cr) != NRF_SUCCESS);
+        // while (app_uart_put(cr) != NRF_SUCCESS);
+
+        // app_uart_put(cr);
+        // app_uart_put(cr);
+        // app_uart_put(cr);
+
+        uint8_t chain[12] = {'h', 'e', 'l'};
+        app_uart_put_buffer(chain, sizeof(chain));
+
+        nrf_delay_ms(500);
 
         if (cr == 'q' || cr == 'Q')
         {

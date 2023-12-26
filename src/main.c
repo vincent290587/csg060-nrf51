@@ -3,13 +3,14 @@
 #include <stdint.h>
 #include <libraries/hardfault/hardfault.h>
 
+#define NRF_LOG_MODULE_NAME "MAIN"
+
 #include "nrf.h"
 #include "bsp.h"
 #include "uart.h"
 #include "app_error.h"
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
-/*lint -save -e14 */
 
 /**
  * Function is implemented as weak so that it can be overwritten by custom application error handler
@@ -52,7 +53,7 @@ int main(void)
 
     NRF_LOG_INFO("Hello world\r\n");
 
-    //uart_init();
+    uart_init();
 
     // This part of the example is just for testing the loopback .
     while (true)

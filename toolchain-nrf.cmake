@@ -91,7 +91,7 @@ set(CMAKE_EXE_LINKER_FLAGS "--specs=nosys.specs -lnosys -lm" CACHE INTERNAL "Lin
 
 # Options for DEBUG build
 # -Og   Enables optimizations that do not interfere with debugging.
-# -g    Produce debugging information in the operating system�s native format.
+# -g    Produce debugging information in the operating system's native format.
 set(CMAKE_C_FLAGS_DEBUG "-O0 -g" CACHE INTERNAL "C Compiler options for debug build type")
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -g" CACHE INTERNAL "C++ Compiler options for debug build type")
 set(CMAKE_ASM_FLAGS_DEBUG "-g" CACHE INTERNAL "ASM Compiler options for debug build type")
