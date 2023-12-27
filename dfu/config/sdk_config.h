@@ -399,7 +399,7 @@
 // <e> NRF_LOG_ENABLED - nrf_log - Logging
 //==========================================================
 #ifndef NRF_LOG_ENABLED
-#define NRF_LOG_ENABLED 0
+#define NRF_LOG_ENABLED 1
 #endif
 #if  NRF_LOG_ENABLED
 // <e> NRF_LOG_USES_COLORS - If enabled then ANSI escape code for colors is prefixed to every string
@@ -476,7 +476,7 @@
 // <i> Log data is buffered and can be processed in idle.
 //==========================================================
 #ifndef NRF_LOG_DEFERRED
-#define NRF_LOG_DEFERRED 1
+#define NRF_LOG_DEFERRED 0
 #endif
 #if  NRF_LOG_DEFERRED
 // <o> NRF_LOG_DEFERRED_BUFSIZE - Size of the buffer for logs in words. 
@@ -501,8 +501,80 @@
 #endif //NRF_LOG_ENABLED
 // </e>
 
+// <h> nrf_log_backend - Logging sink
+
+//==========================================================
+// <o> NRF_LOG_BACKEND_MAX_STRING_LENGTH - Buffer for storing single output string
+// <i> Logger backend RAM usage is determined by this value.
+
+#ifndef NRF_LOG_BACKEND_MAX_STRING_LENGTH
+#define NRF_LOG_BACKEND_MAX_STRING_LENGTH 128
+#endif
+
+// <o> NRF_LOG_TIMESTAMP_DIGITS - Number of digits for timestamp
+// <i> If higher resolution timestamp source is used it might be needed to increase that
+
+#ifndef NRF_LOG_TIMESTAMP_DIGITS
+#define NRF_LOG_TIMESTAMP_DIGITS 8
+#endif
+
 // </h> 
 //==========================================================
+
+
+// <e> NRF_LOG_BACKEND_SERIAL_USES_RTT - If enabled data is printed using RTT
+//==========================================================
+#ifndef NRF_LOG_BACKEND_SERIAL_USES_RTT
+#define NRF_LOG_BACKEND_SERIAL_USES_RTT 1
+#endif
+#if  NRF_LOG_BACKEND_SERIAL_USES_RTT
+// <o> NRF_LOG_BACKEND_RTT_OUTPUT_BUFFER_SIZE - RTT output buffer size.
+// <i> Should be equal or bigger than \ref NRF_LOG_BACKEND_MAX_STRING_LENGTH.
+// <i> This value is used in Segger RTT configuration to set the buffer size
+// <i> if it is bigger than default RTT buffer size.
+
+#ifndef NRF_LOG_BACKEND_RTT_OUTPUT_BUFFER_SIZE
+#define NRF_LOG_BACKEND_RTT_OUTPUT_BUFFER_SIZE 256
+#endif
+
+#endif //NRF_LOG_BACKEND_SERIAL_USES_RTT
+// </e>
+
+// </h>
+//==========================================================
+
+// </h>
+//==========================================================
+
+// <h> nRF_Segger_RTT
+
+//==========================================================
+// <h> segger_rtt - SEGGER RTT
+
+//==========================================================
+// <o> SEGGER_RTT_CONFIG_BUFFER_SIZE_UP - Size of upstream buffer.
+#ifndef SEGGER_RTT_CONFIG_BUFFER_SIZE_UP
+#define SEGGER_RTT_CONFIG_BUFFER_SIZE_UP 64
+#endif
+
+// <o> SEGGER_RTT_CONFIG_MAX_NUM_UP_BUFFERS - Size of upstream buffer.
+#ifndef SEGGER_RTT_CONFIG_MAX_NUM_UP_BUFFERS
+#define SEGGER_RTT_CONFIG_MAX_NUM_UP_BUFFERS 2
+#endif
+
+// <o> SEGGER_RTT_CONFIG_BUFFER_SIZE_DOWN - Size of upstream buffer.
+#ifndef SEGGER_RTT_CONFIG_BUFFER_SIZE_DOWN
+#define SEGGER_RTT_CONFIG_BUFFER_SIZE_DOWN 16
+#endif
+
+// <o> SEGGER_RTT_CONFIG_MAX_NUM_DOWN_BUFFERS - Size of upstream buffer.
+#ifndef SEGGER_RTT_CONFIG_MAX_NUM_DOWN_BUFFERS
+#define SEGGER_RTT_CONFIG_MAX_NUM_DOWN_BUFFERS 2
+#endif
+
+// </h>
+//==========================================================
+
 
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H

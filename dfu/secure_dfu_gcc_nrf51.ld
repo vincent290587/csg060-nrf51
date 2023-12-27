@@ -9,15 +9,15 @@ MEMORY
    *  MBR to init the bootloader when starting the system. This value must correspond to
    *  BOOTLOADER_REGION_START found in dfu_types.h. The system is prevented from starting up if
    *  those values do not match. The check is performed in main.c, see
-   *  APP_ERROR_CHECK_BOOL(*((uint32_t *)NRF_UICR_BOOT_START_ADDRESS) == BOOTLOADER_REGION_START);
+   *  APP_ERROR_CHECK_BOOL(*((uint32_t *)NRF_UICR_BOOTLOADER_START_ADDRESS) == BOOTLOADER_REGION_START);
    */
-  FLASH (rx) : ORIGIN = 0x3AC00, LENGTH = 0x5000
+  FLASH (rx) : ORIGIN = 0x30000, LENGTH = 0xFC00
 
   /** RAM Region for bootloader. This setting is suitable when used with s110, s120, s130, s310. */
   RAM (rwx) :  ORIGIN = 0x20002C00, LENGTH = 0x5380
 
   /** Location of non initialized RAM. Non initialized RAM is used for exchanging bond information
-   *  from application to bootloader when using buttonluss DFU OTA.
+   *  from application to bootloader when using buttonless DFU OTA.
    */
   NOINIT (rwx) :  ORIGIN = 0x20007F80, LENGTH = 0x80
 

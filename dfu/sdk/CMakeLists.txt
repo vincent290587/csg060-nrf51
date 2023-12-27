@@ -40,6 +40,11 @@ set(SRC
     ${SDK_ROOT}/components/libraries/bootloader/dfu/nrf_dfu_settings.c
     ${SDK_ROOT}/components/libraries/bootloader/dfu/nrf_dfu_transport.c
     ${SDK_ROOT}/components/libraries/bootloader/dfu/nrf_dfu_utils.c
+    ${SDK_ROOT}/external/segger_rtt/RTT_Syscalls_GCC.c
+    ${SDK_ROOT}/external/segger_rtt/SEGGER_RTT.c
+    ${SDK_ROOT}/external/segger_rtt/SEGGER_RTT_printf.c
+    ${SDK_ROOT}/components/libraries/log/src/nrf_log_backend_serial.c
+    ${SDK_ROOT}/components/libraries/log/src/nrf_log_frontend.c
 )
 
 add_library(${PROJECT_NAME} ${SRC})
@@ -80,6 +85,9 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${SDK_ROOT}/components/softdevice/s130/headers/nrf51
     ${SDK_ROOT}/components/libraries/queue
     ${SDK_ROOT}/components/toolchain/gcc
+    ${SDK_ROOT}/external/segger_rtt
+    ${SDK_ROOT}/components/libraries/log
+    ${SDK_ROOT}/components/libraries/log/src
 )
 
 target_link_libraries(${PROJECT_NAME} PUBLIC dfu_config)

@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.27)
-project(csg060_dfu)
+project(csg060_dfu LANGUAGES C ASM)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 set(CMAKE_VERBOSE_MAKEFILE        OFF)
@@ -20,6 +20,7 @@ add_executable(${PROJECT_NAME}
         dfu-cc.pb.c
         dfu_req_handling.c
         vault/pk.c
+        qemu_rtt.c
 )
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config)
@@ -36,6 +37,11 @@ target_link_libraries(${PROJECT_NAME} PRIVATE SDK_DFU)
 target_link_libraries(${PROJECT_NAME} PRIVATE --specs=nano.specs)
 target_link_libraries(${PROJECT_NAME} PRIVATE nosys)
 target_link_libraries(${PROJECT_NAME} PRIVATE -l:micro_ecc_lib_nrf51.a)
+
+if (USE_QEMU)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--wrap=SEGGER_RTT_WriteNoLock)
+    target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--wrap=SEGGER_RTT_WriteSkipNoLock)
+endif(USE_QEMU)
 
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         BYPRODUCTS ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex ${PROJECT_NAME}.bin
