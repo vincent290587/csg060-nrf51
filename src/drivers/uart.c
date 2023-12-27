@@ -26,8 +26,8 @@
 
 #define UART_PASSTHROUGH 0
 
-#define UART_RECV_TIMEOUT_MS    ((os_time_t)10)
-#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)30000)
+#define UART_RECV_TIMEOUT_MS    ((os_time_t)15)
+#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)120000)
 
 extern uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
@@ -43,9 +43,11 @@ void uart_error_handle(app_uart_evt_t * p_event)
     }
 }
 
+// https://github.com/EBiCS/EBiCS_Firmware/blob/master/Src/display_bafang.c
+
 enum {
-    CSG060_CMD__REQUEST = 0x11,
-    CSG060_CMD__SET_VALUE = 0x16,
+    CSG060_CMD__STARTREQUEST = 0x11,
+    CSG060_CMD__STARTINFO = 0x16,
 };
 
 enum {
@@ -56,6 +58,8 @@ enum {
 static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
 
 #if UART_PASSTHROUGH
+    NRF_LOG_INFO("Received controller data:\n");
+    NRF_LOG_HEXDUMP_INFO(p_buffer, length);
     app_uart_put_buffer(p_buffer, length);
 #else
 
@@ -71,14 +75,18 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
     NRF_LOG_DEBUG("cmd: 0x%02X arg 0x%02X\n", p_data->cmd, p_data->arg);
 
     // handle MAX_RPM packet
-    if (p_data->cmd == CSG060_CMD__SET_VALUE && p_data->arg == CSG060_ARG__MAX_RPM) {
+    if (p_data->cmd == CSG060_CMD__STARTINFO && p_data->arg == CSG060_ARG__MAX_RPM) {
         NRF_LOG_INFO("MAX RPM command detected: upgrading speed\n");
-        const uint8_t new_buffer[] = {CSG060_CMD__SET_VALUE, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27};
+        // Default value is BD hex which is 189 rpm. Wheel diameter for a 700C-38 tire is around 2.18 mtrs
+        // This leads to a top speed of 189 * 2.18 * 60 / 1000 kph = 24.7 kph
+        const uint8_t new_buffer[] = {CSG060_CMD__STARTINFO, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27}; // 16+1F+00+F2 = 27
         ret_code_t err_code = app_uart_put_buffer(new_buffer, sizeof(new_buffer));
         APP_ERROR_CHECK(err_code);
-    } else {
-        ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
+    } else if (p_data->cmd == CSG060_CMD__STARTREQUEST || p_data->cmd == CSG060_CMD__STARTINFO) {
+        const ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
         APP_ERROR_CHECK(err_code);
+    } else {
+        NRF_LOG_WARNING("Not forwarding bytes: wrong header\n");
     }
 #endif
 }
@@ -96,7 +104,7 @@ void uart_init(p_wait_func_t pFunc) {
         NRF_UART_PSEL_DISCONNECTED,
         APP_UART_FLOW_CONTROL_DISABLED,
         false,
-        UART_BAUDRATE_BAUDRATE_Baud1200
+        UART_BAUDRATE_BAUDRATE_Baud1200 // byte duration: 8.333 ms
     };
 
     APP_UART_FIFO_INIT(&comm_params,
@@ -110,6 +118,8 @@ void uart_init(p_wait_func_t pFunc) {
 
     uint8_t _buffer[128];
     size_t buffer_cnt = 0;
+
+    NRF_LOG_INFO("Ready for bytes\n");
 
     while (true)
     {
