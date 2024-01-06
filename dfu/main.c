@@ -47,6 +47,9 @@
  *
  */
 
+#include <dfu_mgmt_types.h>
+#include <nrf_dfu_types.h>
+#include <nrf_dfu_settings.h>
 #include <stdint.h>
 #include "boards.h"
 #include "nrf_mbr.h"
@@ -91,6 +94,35 @@ static void buttons_init(void)
                              NRF_GPIO_PIN_SENSE_LOW);
 }
 
+extern nrf_dfu_settings_t s_dfu_settings;
+
+nrf_dfu_action_t m_dfu_action __attribute__ ((section(".noinit")))
+                              __attribute__((used));
+
+bool nrf_dfu_enter_check(void)
+{
+    // if (nrf_gpio_pin_read(BOOTLOADER_BUTTON) == 0)
+    // {
+    //     return true;
+    // }
+
+    if (m_dfu_action.enter_buttonless_dfu && m_dfu_action.passcode == DFU_PASSCODE) {
+        m_dfu_action.enter_buttonless_dfu = 0;
+        m_dfu_action.passcode = 0;
+        return true;
+    }
+
+    m_dfu_action.enter_buttonless_dfu = 0;
+    m_dfu_action.passcode = 0;
+
+    if (s_dfu_settings.enter_buttonless_dfu == 1)
+    {
+        s_dfu_settings.enter_buttonless_dfu = 0;
+        APP_ERROR_CHECK(nrf_dfu_settings_write(NULL));
+        return true;
+    }
+    return false;
+}
 
 /**@brief Function for application main entry.
  */

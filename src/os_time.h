@@ -7,6 +7,8 @@
 
 #include <stdint.h>
 
+#define TICK_FREQ              1000uL
+
 typedef uint32_t os_time_t;
 
 void os_time__init();

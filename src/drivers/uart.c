@@ -132,6 +132,8 @@ void uart_init(p_wait_func_t pFunc) {
 
         if (cur_time - last_recv_off > UART_SYSOFF_TIMEOUT_MS)
         {
+            NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
+            nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
             return;
         } else {
             pFunc();

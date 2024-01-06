@@ -21,8 +21,6 @@
 #include "nrf_drv_clock.h"
 
 
-#define TICK_FREQ              1000uL
-
 #define RTC_PRESCALER          ((RTC_DEFAULT_CONFIG_FREQUENCY + (TICK_FREQ >> 1)) / TICK_FREQ) // rounded number
 
 

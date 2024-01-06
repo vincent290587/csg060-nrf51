@@ -23,6 +23,7 @@ aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/drivers AUX_SRCS)
 add_executable(csg060_fw
         main.c
         os_time.c
+        dfu_mgmt.c
         ${AUX_SRCS}
 )
 

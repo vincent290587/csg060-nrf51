@@ -13,6 +13,7 @@ add_compile_options(-Wno-attributes -Wsign-compare -Wenum-compare -Wno-error=dep
 
 include_directories(
         ${CMAKE_CURRENT_SOURCE_DIR}
+        ${CMAKE_SOURCE_DIR}/src
 )
 
 add_executable(${PROJECT_NAME}
@@ -43,16 +44,6 @@ if (USE_QEMU)
     target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--wrap=SEGGER_RTT_WriteSkipNoLock)
 endif(USE_QEMU)
 
-add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
-        BYPRODUCTS ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex ${PROJECT_NAME}.bin
-        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.elf
-        COMMAND ${CMAKE_OBJCOPY} -Oihex ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex
-        COMMAND ${CMAKE_OBJCOPY} -Obinary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
-        COMMENT "Building ${HEX_FILE} Building ${BIN_FILE}"
-        COMMAND ${CMAKE_SIZE_UTIL} --format=berkeley ${PROJECT_NAME}
-        COMMENT "Invoking: Print Size"
-)
-
 find_program(NRFUTIL "nrfutil")
 find_program(NRFJPROG "nrfjprog")
 find_program(MERGEHEX "mergehex" HINTS "c:/Program Files (x86)/Nordic Semiconductor/nrf5x/bin")
@@ -68,6 +59,27 @@ endif()
 if(NOT NRFUTIL)
     message(FATAL_ERROR "nrfutil not found, not able to create DFU packages of connectivity firmware.")
 endif()
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
+        BYPRODUCTS ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex ${PROJECT_NAME}.bin
+        COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.elf
+        COMMAND ${CMAKE_OBJCOPY} -Oihex ${PROJECT_NAME}.elf ${PROJECT_NAME}.hex
+        COMMAND ${CMAKE_OBJCOPY} -Obinary ${PROJECT_NAME}.elf ${PROJECT_NAME}.bin
+        COMMENT "Building ${HEX_FILE} Building ${BIN_FILE}"
+        COMMAND ${CMAKE_SIZE_UTIL} --format=berkeley ${PROJECT_NAME}
+        COMMENT "Invoking: Print Size"
+
+        BYPRODUCTS ${PROJECT_NAME}_settings.hex ${PROJECT_NAME}_settings.bin settings_dfu.hex settings_dfu.bin
+        DEPENDS csg060_fw
+        # Create settings
+        COMMAND ${NRFUTIL} settings generate --family NRF51 --application-version 1 --application ${CMAKE_BINARY_DIR}/src/csg060_fw.hex --bootloader-version 1 --bl-settings-version 1 settings_dfu.hex
+        # Merge bootloader and settings
+        COMMAND ${MERGEHEX} --merge ${PROJECT_NAME}.hex settings_dfu.hex --output ${PROJECT_NAME}_settings.hex
+        # Convert to binary
+        COMMAND ${CMAKE_OBJCOPY} --input-target=ihex --output-target=binary ${PROJECT_NAME}_settings.hex ${PROJECT_NAME}_settings.bin
+        COMMAND ${CMAKE_OBJCOPY} --input-target=ihex --output-target=binary settings_dfu.hex settings_dfu.bin
+        COMMENT "Created DFU settings: ${PROJECT_NAME}_settings.*"
+)
 
 add_custom_target(flash_dfu
         DEPENDS ${PROJECT_NAME}.hex

@@ -6,7 +6,7 @@
 #include <libraries/hardfault/hardfault.h>
 #include "nrf.h"
 #include "bsp.h"
-#include "boards.h"
+#include "dfu_mgmt.h"
 #include "uart.h"
 #include "app_error.h"
 #include "nrf_gpio.h"
@@ -89,7 +89,6 @@ static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 
         case NRF_PWR_MGMT_EVT_PREPARE_DFU:
             NRF_LOG_INFO("NRF_PWR_MGMT_EVT_PREPARE_DFU\n");
-            APP_ERROR_HANDLER(NRF_ERROR_API_NOT_IMPLEMENTED);
         break;
     }
 
@@ -148,13 +147,15 @@ int main(void)
 
     NRF_LOG_INFO("Hello CSG060\n");
 
+    nrf_pwr_mgmt_init(TICK_FREQ);
+
+    dfu_mgmt__init();
+
     const ret_code_t err_code = nrf_drv_gpiote_init();
     APP_ERROR_CHECK(err_code);
 
     uart_init(_wait_func);
 
-    NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
-    nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
     while (true) {
         nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_CONTINUE);
     }
