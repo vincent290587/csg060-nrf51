@@ -13,6 +13,7 @@ set(SRC
     ${SDK_ROOT}/components/libraries/util/app_error.c
     ${SDK_ROOT}/components/libraries/fifo/app_fifo.c
     ${SDK_ROOT}/components/libraries/util/app_util_platform.c
+    ${SDK_ROOT}/components/drivers_nrf/ppi/nrf_drv_ppi.c
     ${SDK_ROOT}/components/libraries/util/nrf_assert.c
     ${SDK_ROOT}/components/libraries/uart/retarget.c
     ${SDK_ROOT}/components/libraries/util/sdk_errors.c
@@ -37,6 +38,7 @@ target_include_directories(SDK_LIBS PUBLIC
     ${SDK_ROOT}/components/drivers_nrf/clock
     ${SDK_ROOT}/components/drivers_nrf/common
     ${SDK_ROOT}/components/drivers_nrf/rtc
+    ${SDK_ROOT}/components/drivers_nrf/ppi
     ${SDK_ROOT}/components/drivers_nrf/wdt
     ${SDK_ROOT}/components/libraries/pwr_mgmt
     ${SDK_ROOT}/components/libraries/experimental_section_vars

@@ -19,7 +19,6 @@ include_directories(
 
 aux_source_directory(${CMAKE_CURRENT_SOURCE_DIR}/drivers AUX_SRCS)
 
-# TODO SRC
 add_executable(csg060_fw
         main.c
         os_time.c
