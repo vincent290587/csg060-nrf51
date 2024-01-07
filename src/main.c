@@ -53,18 +53,19 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * file_name)
 
 static uint32_t _wakeup_prepare(void) { // configure new interrupt
 
-    nrf_drv_gpiote_in_config_t in_config;
-    in_config.is_watcher = false;
-    in_config.hi_accuracy = true;
+    // https://github.com/NordicPlayground/nrf51-powerdown-examples/blob/master/system_off_wakeup_on_gpiote/main.c
+
+    // Configure to generate interrupt and wakeup on pin signal low. "false" means that gpiote will use the PORT event,
+    // which is low power, i.e. does not add any noticable current consumption (<<1uA).
+    // Setting this to "true" will make the gpiote module use GPIOTE->IN events which add ~8uA for nRF52 and ~1mA for nRF51.
+    nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_HITOLO(false);
     in_config.pull = NRF_GPIO_PIN_PULLUP;
-    in_config.sense = NRF_GPIOTE_POLARITY_HITOLO;
 
     ret_code_t err_code = nrf_drv_gpiote_in_init(WAKE_PIN, &in_config, NULL);
     APP_ERROR_CHECK(err_code);
 
     nrf_drv_gpiote_in_event_enable(WAKE_PIN, true);
 
-    nrf_gpio_cfg_sense_input(WAKE_PIN, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
     return err_code;
 }
 
