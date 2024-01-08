@@ -23,6 +23,7 @@ add_executable(${PROJECT_NAME}
         vault/pk.c
         qemu_rtt.c
 )
+add_dependencies(${PROJECT_NAME} csg060_fw)
 
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/config)
 
@@ -70,9 +71,8 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMENT "Invoking: Print Size"
 
         BYPRODUCTS ${PROJECT_NAME}_settings.hex ${PROJECT_NAME}_settings.bin settings_dfu.hex settings_dfu.bin
-        DEPENDS csg060_fw
         # Create settings
-        COMMAND ${NRFUTIL} settings generate --family NRF51 --application-version 1 --application ${CMAKE_BINARY_DIR}/src/csg060_fw.hex --bootloader-version 1 --bl-settings-version 1 settings_dfu.hex
+        COMMAND ${NRFUTIL} settings generate --no-backup --family NRF51 --application-version 1 --application ${CMAKE_BINARY_DIR}/src/csg060_fw.hex --bootloader-version 1 --bl-settings-version 1 settings_dfu.hex
         # Merge bootloader and settings
         COMMAND ${MERGEHEX} --merge ${PROJECT_NAME}.hex settings_dfu.hex --output ${PROJECT_NAME}_settings.hex
         # Convert to binary
