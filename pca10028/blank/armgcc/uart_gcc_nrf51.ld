@@ -16,8 +16,6 @@ MEMORY
   /** Location of bootloader setting in at the last flash page. */
   BOOTLOADER_SETTINGS (rw) : ORIGIN = 0x0003FC00, LENGTH = 0x0400
 
-  /** Location in UICR where bootloader start address is stored. */
-  UICR_BOOTLOADER (r) : ORIGIN = 0x10001014, LENGTH = 0x04
 }
 
 SECTIONS

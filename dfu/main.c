@@ -132,7 +132,10 @@ int main(void)
 
     (void) NRF_LOG_INIT(NULL);
 
-    NRF_LOG_INFO("Inside main\r\n");
+    NRF_LOG_INFO("Inside main\n");
+
+    NRF_LOG_INFO("Softdevice size 0x%lX \n", SD_SIZE_GET(MBR_SIZE));
+    NRF_LOG_INFO("Softdevice FWID 0x%lX \n", SD_FWID_GET(MBR_SIZE));
 
     // leds_init();
     // buttons_init();
