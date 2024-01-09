@@ -36,15 +36,15 @@ static void rtc_handler(nrf_drv_rtc_int_type_t int_type)
 {
     if (int_type == NRF_DRV_RTC_INT_COMPARE0)
     {
-        NRF_LOG_INFO("NRF_DRV_RTC_INT_COMPARE0\n");
+        // NRF_LOG_INFO("NRF_DRV_RTC_INT_COMPARE0\n");
     }
     else if (int_type == NRF_DRV_RTC_INT_TICK)
     {
-        NRF_LOG_INFO("NRF_DRV_RTC_INT_TICK\n");
+        // NRF_LOG_INFO("NRF_DRV_RTC_INT_TICK\n");
     }
     else if (int_type == NRF_DRV_RTC_INT_OVERFLOW)
     {
-        NRF_LOG_INFO("NRF_DRV_RTC_INT_TICK\n");
+        // NRF_LOG_INFO("NRF_DRV_RTC_INT_OVERFLOW\n");
     }
 }
 
@@ -64,6 +64,8 @@ static void rtc_config(void)
 {
     uint32_t err_code;
 
+    lfclk_config();
+
     //Initialize RTC instance
     nrf_drv_rtc_config_t config = NRF_DRV_RTC_DEFAULT_CONFIG;
     config.prescaler = RTC_PRESCALER - 1;
@@ -71,7 +73,7 @@ static void rtc_config(void)
     APP_ERROR_CHECK(err_code);
 
     //Enable tick event & interrupt
-    nrf_drv_rtc_tick_enable(&rtc, false);
+    nrf_drv_rtc_tick_enable(&rtc, true);
 
     nrf_drv_rtc_overflow_enable(&rtc, true);
 
@@ -85,6 +87,11 @@ uint32_t os_get_millis() {
 
 void os_time__init() {
     rtc_config();
+#ifdef DEBUG
+    while (!os_get_millis()) {
+
+    }
+#endif
 }
 
 /**
@@ -96,7 +103,9 @@ static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
     switch (event)
     {
         case NRF_PWR_MGMT_EVT_PREPARE_SYSOFF:
+            nrf_drv_rtc_tick_enable(&rtc, false);
             nrf_drv_rtc_disable(&rtc);
+            nrf_drv_clock_lfclk_release();
         break;
 
         case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
