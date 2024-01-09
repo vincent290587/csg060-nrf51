@@ -72,6 +72,6 @@ if (NOT USE_SOFTDEVICE)
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
             #Then program
             COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase
-            COMMAND ${NRFJPROG} --reset -f nrf51 # TODO
+            COMMAND ${NRFJPROG} --reset -f nrf51
     )
 endif(NOT USE_SOFTDEVICE)
