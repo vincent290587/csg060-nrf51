@@ -21,6 +21,7 @@ set(SRC
     ${SDK_ROOT}/components/drivers_nrf/common/nrf_drv_common.c
     ${SDK_ROOT}/components/drivers_nrf/rng/nrf_drv_rng.c
     ${SDK_ROOT}/components/drivers_nrf/hal/nrf_nvmc.c
+    ${SDK_ROOT}/components/drivers_nrf/ppi/nrf_drv_ppi.c
     ${SDK_ROOT}/components/libraries/bootloader/ble_dfu/nrf_ble_dfu.c
     ${SDK_ROOT}/components/ble/common/ble_advdata.c
     ${SDK_ROOT}/components/ble/common/ble_conn_params.c
@@ -67,6 +68,7 @@ target_include_directories(${PROJECT_NAME} PUBLIC
     ${SDK_ROOT}/components/libraries/log/src
     ${SDK_ROOT}/components/libraries/bootloader/dfu
     ${SDK_ROOT}/components/drivers_nrf/delay
+    ${SDK_ROOT}/components/drivers_nrf/ppi
     ${SDK_ROOT}/components/ble/common
     ${SDK_ROOT}/components/drivers_nrf/common
     ${SDK_ROOT}/components/libraries/svc

@@ -1,5 +1,6 @@
 #define NRF_LOG_MODULE_NAME "MAIN"
 
+#include <nrf_delay.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -7,6 +8,7 @@
 #include "nrf.h"
 #include "bsp.h"
 #include "dfu_mgmt.h"
+#include "boards.h"
 #include "uart.h"
 #include "app_error.h"
 #include "nrf_gpio.h"
@@ -19,7 +21,7 @@
 
 #include "os_time.h"
 
-#define WAKE_PIN 6
+#define WAKE_PIN 3
 
 
 nrf_drv_wdt_channel_id m_channel_id;
@@ -53,18 +55,19 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * file_name)
 
 static uint32_t _wakeup_prepare(void) { // configure new interrupt
 
-    nrf_drv_gpiote_in_config_t in_config;
-    in_config.is_watcher = false;
-    in_config.hi_accuracy = true;
+    // https://github.com/NordicPlayground/nrf51-powerdown-examples/blob/master/system_off_wakeup_on_gpiote/main.c
+
+    // Configure to generate interrupt and wakeup on pin signal low. "false" means that gpiote will use the PORT event,
+    // which is low power, i.e. does not add any noticable current consumption (<<1uA).
+    // Setting this to "true" will make the gpiote module use GPIOTE->IN events which add ~8uA for nRF52 and ~1mA for nRF51.
+    nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_HITOLO(false);
     in_config.pull = NRF_GPIO_PIN_PULLUP;
-    in_config.sense = NRF_GPIOTE_POLARITY_HITOLO;
 
     ret_code_t err_code = nrf_drv_gpiote_in_init(WAKE_PIN, &in_config, NULL);
     APP_ERROR_CHECK(err_code);
 
     nrf_drv_gpiote_in_event_enable(WAKE_PIN, true);
 
-    nrf_gpio_cfg_sense_input(WAKE_PIN, NRF_GPIO_PIN_PULLUP, NRF_GPIO_PIN_SENSE_LOW);
     return err_code;
 }
 
@@ -121,7 +124,7 @@ static void wdt_event_handler(void) {
 }
 
 static void _wdt_enable(void) {
-
+#if WDT_ENABLED
     //Configure WDT.
     ret_code_t err_code;
     nrf_drv_wdt_config_t config = NRF_DRV_WDT_DEAFULT_CONFIG;
@@ -130,11 +133,14 @@ static void _wdt_enable(void) {
     err_code = nrf_drv_wdt_channel_alloc(&m_channel_id);
     APP_ERROR_CHECK(err_code);
     nrf_drv_wdt_enable();
+#endif
 }
 
 static void _wait_func(void) {
+#if WDT_ENABLED
     nrf_drv_wdt_channel_feed(m_channel_id);
     nrf_pwr_mgmt_run();
+#endif
 }
 
 int main(void)
@@ -151,13 +157,39 @@ int main(void)
 
     dfu_mgmt__init();
 
-    const ret_code_t err_code = nrf_drv_gpiote_init();
+    ret_code_t err_code = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(err_code);
+
+    //Initialize output pin
+    const nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(true); //Configure output LED
+    err_code = nrf_drv_gpiote_out_init(24, &out_config);                       //Initialize output button
     APP_ERROR_CHECK(err_code);
 
     uart_init(_wait_func);
 
+    int count = 50;
+    while (count--) {
+        nrf_drv_gpiote_out_toggle(24);
+        nrf_delay_ms(50);
+    }
+    nrf_drv_gpiote_out_clear(24);
+
+    NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
+    NRF_LOG_FLUSH();
+
+    nrf_delay_ms(50);
+
+#if WDT_ENABLED
+    nrf_drv_wdt_channel_feed(m_channel_id);
+#endif
+
+    nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
     while (true) {
         nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_CONTINUE);
+
+#if WDT_ENABLED
+        nrf_drv_wdt_channel_feed(m_channel_id);
+#endif
     }
 
     return 0;

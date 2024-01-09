@@ -24,28 +24,34 @@
 #define UART_RX_BUF_SIZE 32u
 #define UART_TX_BUF_SIZE 32u
 
-#define UART_PASSTHROUGH 0
+#define UART_PASSTHROUGH 1
 
-#define UART_RECV_TIMEOUT_MS    ((os_time_t)10)
-#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)30000)
+#define UART_RECV_TIMEOUT_MS    ((os_time_t)15)
+#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)5000)
 
 extern uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
-void uart_error_handle(app_uart_evt_t * p_event)
+static void uart_error_handle(app_uart_evt_t * p_event)
 {
+#ifdef DEBUG
     if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR)
     {
+        NRF_LOG_ERROR("APP_UART_COMMUNICATION_ERROR\n");
         APP_ERROR_HANDLER(p_event->data.error_communication);
     }
     else if (p_event->evt_type == APP_UART_FIFO_ERROR)
     {
+        NRF_LOG_ERROR("AAPP_UART_FIFO_ERROR\n");
         APP_ERROR_HANDLER(p_event->data.error_code);
     }
+#endif
 }
 
+// https://github.com/EBiCS/EBiCS_Firmware/blob/master/Src/display_bafang.c
+
 enum {
-    CSG060_CMD__REQUEST = 0x11,
-    CSG060_CMD__SET_VALUE = 0x16,
+    CSG060_CMD__STARTREQUEST = 0x11,
+    CSG060_CMD__STARTINFO = 0x16,
 };
 
 enum {
@@ -56,6 +62,8 @@ enum {
 static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
 
 #if UART_PASSTHROUGH
+    NRF_LOG_INFO("Received controller data:\n");
+    NRF_LOG_HEXDUMP_INFO(p_buffer, length);
     app_uart_put_buffer(p_buffer, length);
 #else
 
@@ -71,14 +79,18 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
     NRF_LOG_DEBUG("cmd: 0x%02X arg 0x%02X\n", p_data->cmd, p_data->arg);
 
     // handle MAX_RPM packet
-    if (p_data->cmd == CSG060_CMD__SET_VALUE && p_data->arg == CSG060_ARG__MAX_RPM) {
+    if (p_data->cmd == CSG060_CMD__STARTINFO && p_data->arg == CSG060_ARG__MAX_RPM) {
         NRF_LOG_INFO("MAX RPM command detected: upgrading speed\n");
-        const uint8_t new_buffer[] = {CSG060_CMD__SET_VALUE, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27};
+        // Default value is BD hex which is 189 rpm. Wheel diameter for a 700C-38 tire is around 2.18 mtrs
+        // This leads to a top speed of 189 * 2.18 * 60 / 1000 kph = 24.7 kph
+        const uint8_t new_buffer[] = {CSG060_CMD__STARTINFO, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27}; // 16+1F+00+F2 = 27
         ret_code_t err_code = app_uart_put_buffer(new_buffer, sizeof(new_buffer));
         APP_ERROR_CHECK(err_code);
-    } else {
-        ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
+    } else if (p_data->cmd == CSG060_CMD__STARTREQUEST || p_data->cmd == CSG060_CMD__STARTINFO) {
+        const ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
         APP_ERROR_CHECK(err_code);
+    } else {
+        NRF_LOG_WARNING("Not forwarding bytes: wrong header\n");
     }
 #endif
 }
@@ -90,13 +102,13 @@ void uart_init(p_wait_func_t pFunc) {
     os_time_t last_recv_off = 0;
 
     const app_uart_comm_params_t comm_params = {
-        4, // TODO
-        5,
+        .rx_pin_no = 3, // D0 is TX
+        .tx_pin_no = 4, // D1 is RX
         NRF_UART_PSEL_DISCONNECTED,
         NRF_UART_PSEL_DISCONNECTED,
         APP_UART_FLOW_CONTROL_DISABLED,
         false,
-        UART_BAUDRATE_BAUDRATE_Baud1200
+        UART_BAUDRATE_BAUDRATE_Baud115200 // byte duration: 8.333 ms
     };
 
     APP_UART_FIFO_INIT(&comm_params,
@@ -108,8 +120,13 @@ void uart_init(p_wait_func_t pFunc) {
 
     APP_ERROR_CHECK(err_code);
 
+    const uint8_t _buffer_hello[] = "starting\n";
+    app_uart_put_buffer(_buffer_hello, sizeof(_buffer_hello));
+
     uint8_t _buffer[128];
     size_t buffer_cnt = 0;
+
+    NRF_LOG_INFO("Ready for bytes\n");
 
     while (true)
     {
@@ -117,7 +134,7 @@ void uart_init(p_wait_func_t pFunc) {
         uint8_t cr = 0;
 
         err_code = app_uart_get(&cr);
-        if (err_code == NRF_SUCCESS) {
+        if (err_code == NRF_SUCCESS && buffer_cnt < sizeof(_buffer)) {
             _buffer[buffer_cnt++] = cr;
             last_recv_off = last_recv = cur_time;
         } else if (last_recv && (cur_time - last_recv > UART_RECV_TIMEOUT_MS)) {
@@ -132,8 +149,10 @@ void uart_init(p_wait_func_t pFunc) {
 
         if (cur_time - last_recv_off > UART_SYSOFF_TIMEOUT_MS)
         {
-            NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
-            nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
+            err_code = app_uart_flush();
+            APP_ERROR_CHECK(err_code);
+            err_code = app_uart_close();
+            APP_ERROR_CHECK(err_code);
             return;
         } else {
             pFunc();
@@ -141,29 +160,3 @@ void uart_init(p_wait_func_t pFunc) {
     }
 
 }
-
-/**
- * @brief Handler for shutdown preparation.
- */
-static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
-{
-    uint32_t err_code;
-
-    switch (event)
-    {
-        case NRF_PWR_MGMT_EVT_PREPARE_SYSOFF:
-            err_code = app_uart_close();
-            APP_ERROR_CHECK(err_code);
-        break;
-
-        case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
-            break;
-
-        case NRF_PWR_MGMT_EVT_PREPARE_DFU:
-            break;
-    }
-
-    return true;
-}
-
-NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
