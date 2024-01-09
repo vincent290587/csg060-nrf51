@@ -6,8 +6,8 @@ set(CMAKE_C_STANDARD 11)
 
 message(STATUS "Project version: ${CMAKE_PROJECT_VERSION}")
 
-set(USE_SOFTDEVICE                OFF)
-set(USE_QEMU                      ON)
+set(USE_SOFTDEVICE                ON)
+set(USE_QEMU                      OFF)
 
 if (USE_QEMU)
     add_definitions(-DNRF_LOG_BACKEND_RTT_ENABLED=1)

@@ -75,6 +75,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${NRFUTIL} settings generate --no-backup --family NRF51 --application-version 1 --application ${CMAKE_BINARY_DIR}/src/csg060_fw.hex --bootloader-version 1 --bl-settings-version 1 settings_dfu.hex
         # Merge bootloader and settings
         COMMAND ${MERGEHEX} --merge ${PROJECT_NAME}.hex settings_dfu.hex --output ${PROJECT_NAME}_settings.hex
+        COMMAND ${MERGEHEX} --merge ${PROJECT_NAME}_settings.hex ${CMAKE_BINARY_DIR}/src/csg060_fw.hex --output app_dfu_settings.hex
         # Convert to binary
         COMMAND ${CMAKE_OBJCOPY} --input-target=ihex --output-target=binary ${PROJECT_NAME}_settings.hex ${PROJECT_NAME}_settings.bin
         COMMAND ${CMAKE_OBJCOPY} --input-target=ihex --output-target=binary settings_dfu.hex settings_dfu.bin
@@ -90,6 +91,6 @@ add_custom_target(flash_dfu
         # Build app first
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
         #Then program
-        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase --verify
+        COMMAND ${NRFJPROG} --program app_dfu_settings.hex -f nrf51 --sectorerase --verify
         COMMAND ${NRFJPROG} --reset -f nrf51
 )

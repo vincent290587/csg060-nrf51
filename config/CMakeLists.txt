@@ -27,7 +27,7 @@ if (USE_SOFTDEVICE)
     target_compile_definitions(csg060_config INTERFACE -DSOFTDEVICE_PRESENT)
     target_compile_definitions(csg060_config INTERFACE -DBLE_STACK_SUPPORT_REQD)
     #    target_compile_definitions(csg060_config INTERFACE -DANT_STACK_SUPPORT_REQD)
-    target_compile_definitions(csg060_config INTERFACE -DS310)
+    target_compile_definitions(csg060_config INTERFACE -DS130)
 
 else(USE_SOFTDEVICE)
 
