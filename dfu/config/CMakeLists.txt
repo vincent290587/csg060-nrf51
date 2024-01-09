@@ -24,6 +24,7 @@ target_compile_definitions(dfu_config INTERFACE -D__HEAP_SIZE=0)
 target_compile_definitions(dfu_config INTERFACE -DNRF_SD_BLE_API_VERSION=2)
 target_compile_definitions(dfu_config INTERFACE -DNRF_DFU_SETTINGS_VERSION=1)
 
+#target_compile_definitions(dfu_config INTERFACE -DNRF_LOG_ENABLED=0)
 
 #target_compile_definitions(dfu_config INTERFACE -DBL_SETTINGS_ACCESS_ONLY)
 #target_compile_definitions(dfu_config INTERFACE -DNRF_DFU_SVCI_ENABLED)

@@ -81,11 +81,15 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMENT "Created DFU settings: ${PROJECT_NAME}_settings.*"
 )
 
+add_custom_target(flash_sd
+        COMMAND ${NRFJPROG} --program C:/Nordic/nRF5_SDK_12.3.0_d7731ad/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex -f nrf51 --sectorerase
+)
+
 add_custom_target(flash_dfu
         DEPENDS ${PROJECT_NAME}.hex
         # Build app first
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
         #Then program
-        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase
+        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase --verify
         COMMAND ${NRFJPROG} --reset -f nrf51
 )
