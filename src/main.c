@@ -1,5 +1,6 @@
 #define NRF_LOG_MODULE_NAME "MAIN"
 
+#include <nrf_delay.h>
 #include <stdbool.h>
 #include <stdint.h>
 
@@ -19,7 +20,7 @@
 
 #include "os_time.h"
 
-#define WAKE_PIN 6
+#define WAKE_PIN 3
 
 
 nrf_drv_wdt_channel_id m_channel_id;
@@ -123,7 +124,7 @@ static void wdt_event_handler(void) {
 }
 
 static void _wdt_enable(void) {
-
+#if WDT_ENABLED
     //Configure WDT.
     ret_code_t err_code;
     nrf_drv_wdt_config_t config = NRF_DRV_WDT_DEAFULT_CONFIG;
@@ -132,11 +133,14 @@ static void _wdt_enable(void) {
     err_code = nrf_drv_wdt_channel_alloc(&m_channel_id);
     APP_ERROR_CHECK(err_code);
     nrf_drv_wdt_enable();
+#endif
 }
 
 static void _wait_func(void) {
+#if WDT_ENABLED
     nrf_drv_wdt_channel_feed(m_channel_id);
     nrf_pwr_mgmt_run();
+#endif
 }
 
 int main(void)
@@ -149,15 +153,39 @@ int main(void)
 
     NRF_LOG_INFO("Hello CSG060\n");
 
-    const ret_code_t err_code = nrf_drv_gpiote_init();
+    ret_code_t err_code = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(err_code);
+
+    //Initialize output pin
+    const nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(true); //Configure output LED
+    err_code = nrf_drv_gpiote_out_init(24, &out_config);                       //Initialize output button
     APP_ERROR_CHECK(err_code);
 
     uart_init(_wait_func);
 
+    int count = 50;
+    while (count--) {
+        nrf_drv_gpiote_out_toggle(24);
+        nrf_delay_ms(50);
+    }
+    nrf_drv_gpiote_out_clear(24);
+
     NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
+    NRF_LOG_FLUSH();
+
+    nrf_delay_ms(50);
+
+#if WDT_ENABLED
+    nrf_drv_wdt_channel_feed(m_channel_id);
+#endif
+
     nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_SYSOFF);
     while (true) {
         nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_CONTINUE);
+
+#if WDT_ENABLED
+        nrf_drv_wdt_channel_feed(m_channel_id);
+#endif
     }
 
     return 0;

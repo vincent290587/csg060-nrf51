@@ -24,23 +24,27 @@
 #define UART_RX_BUF_SIZE 32u
 #define UART_TX_BUF_SIZE 32u
 
-#define UART_PASSTHROUGH 0
+#define UART_PASSTHROUGH 1
 
 #define UART_RECV_TIMEOUT_MS    ((os_time_t)15)
-#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)120000)
+#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)5000)
 
 extern uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
-void uart_error_handle(app_uart_evt_t * p_event)
+static void uart_error_handle(app_uart_evt_t * p_event)
 {
+#ifdef DEBUG
     if (p_event->evt_type == APP_UART_COMMUNICATION_ERROR)
     {
+        NRF_LOG_ERROR("APP_UART_COMMUNICATION_ERROR\n");
         APP_ERROR_HANDLER(p_event->data.error_communication);
     }
     else if (p_event->evt_type == APP_UART_FIFO_ERROR)
     {
+        NRF_LOG_ERROR("AAPP_UART_FIFO_ERROR\n");
         APP_ERROR_HANDLER(p_event->data.error_code);
     }
+#endif
 }
 
 // https://github.com/EBiCS/EBiCS_Firmware/blob/master/Src/display_bafang.c
@@ -98,13 +102,13 @@ void uart_init(p_wait_func_t pFunc) {
     os_time_t last_recv_off = 0;
 
     const app_uart_comm_params_t comm_params = {
-        4, // TODO
-        5,
+        .rx_pin_no = 3, // D0 is TX
+        .tx_pin_no = 4, // D1 is RX
         NRF_UART_PSEL_DISCONNECTED,
         NRF_UART_PSEL_DISCONNECTED,
         APP_UART_FLOW_CONTROL_DISABLED,
         false,
-        UART_BAUDRATE_BAUDRATE_Baud1200 // byte duration: 8.333 ms
+        UART_BAUDRATE_BAUDRATE_Baud115200 // byte duration: 8.333 ms
     };
 
     APP_UART_FIFO_INIT(&comm_params,
@@ -115,6 +119,9 @@ void uart_init(p_wait_func_t pFunc) {
                          err_code);
 
     APP_ERROR_CHECK(err_code);
+
+    const uint8_t _buffer_hello[] = "starting\n";
+    app_uart_put_buffer(_buffer_hello, sizeof(_buffer_hello));
 
     uint8_t _buffer[128];
     size_t buffer_cnt = 0;
@@ -127,7 +134,7 @@ void uart_init(p_wait_func_t pFunc) {
         uint8_t cr = 0;
 
         err_code = app_uart_get(&cr);
-        if (err_code == NRF_SUCCESS) {
+        if (err_code == NRF_SUCCESS && buffer_cnt < sizeof(_buffer)) {
             _buffer[buffer_cnt++] = cr;
             last_recv_off = last_recv = cur_time;
         } else if (last_recv && (cur_time - last_recv > UART_RECV_TIMEOUT_MS)) {
@@ -142,6 +149,10 @@ void uart_init(p_wait_func_t pFunc) {
 
         if (cur_time - last_recv_off > UART_SYSOFF_TIMEOUT_MS)
         {
+            err_code = app_uart_flush();
+            APP_ERROR_CHECK(err_code);
+            err_code = app_uart_close();
+            APP_ERROR_CHECK(err_code);
             return;
         } else {
             pFunc();
@@ -149,29 +160,3 @@ void uart_init(p_wait_func_t pFunc) {
     }
 
 }
-
-/**
- * @brief Handler for shutdown preparation.
- */
-static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
-{
-    uint32_t err_code;
-
-    switch (event)
-    {
-        case NRF_PWR_MGMT_EVT_PREPARE_SYSOFF:
-            err_code = app_uart_close();
-            APP_ERROR_CHECK(err_code);
-        break;
-
-        case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
-            break;
-
-        case NRF_PWR_MGMT_EVT_PREPARE_DFU:
-            break;
-    }
-
-    return true;
-}
-
-NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
