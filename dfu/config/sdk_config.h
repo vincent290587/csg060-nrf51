@@ -658,6 +658,69 @@
 // </e>
 
 
+// <e> PPI_ENABLED - nrf_drv_ppi - PPI peripheral driver
+//==========================================================
+#ifndef PPI_ENABLED
+#define PPI_ENABLED 1
+#endif
+#if  PPI_ENABLED
+// <e> PPI_CONFIG_LOG_ENABLED - Enables logging in the module.
+//==========================================================
+#ifndef PPI_CONFIG_LOG_ENABLED
+#define PPI_CONFIG_LOG_ENABLED 0
+#endif
+#if  PPI_CONFIG_LOG_ENABLED
+// <o> PPI_CONFIG_LOG_LEVEL  - Default Severity level
+
+// <0=> Off
+// <1=> Error
+// <2=> Warning
+// <3=> Info
+// <4=> Debug
+
+#ifndef PPI_CONFIG_LOG_LEVEL
+#define PPI_CONFIG_LOG_LEVEL 3
+#endif
+
+// <o> PPI_CONFIG_INFO_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef PPI_CONFIG_INFO_COLOR
+#define PPI_CONFIG_INFO_COLOR 0
+#endif
+
+// <o> PPI_CONFIG_DEBUG_COLOR  - ANSI escape code prefix.
+
+// <0=> Default
+// <1=> Black
+// <2=> Red
+// <3=> Green
+// <4=> Yellow
+// <5=> Blue
+// <6=> Magenta
+// <7=> Cyan
+// <8=> White
+
+#ifndef PPI_CONFIG_DEBUG_COLOR
+#define PPI_CONFIG_DEBUG_COLOR 0
+#endif
+
+#endif //PPI_CONFIG_LOG_ENABLED
+// </e>
+
+#endif //PPI_ENABLED
+// </e>
+
+
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
 

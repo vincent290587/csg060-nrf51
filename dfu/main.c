@@ -54,7 +54,8 @@
 #include <nrf_dfu_types.h>
 #include <nrf_dfu_settings.h>
 #include <stdint.h>
-#include <drivers_nrf/gpiote/nrf_drv_gpiote.h>
+#include <nrf_drv_gpiote.h>
+#include <nrf_drv_ppi.h>
 
 #include "boards.h"
 #include "nrf_mbr.h"
@@ -67,6 +68,11 @@
 #include "app_error_weak.h"
 #include "nrf_bootloader_info.h"
 
+#define UART_RX 3
+#define UART_TX 4
+
+nrf_ppi_channel_t ppi_channel;
+
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
     NRF_LOG_ERROR("received a fault! id: 0x%08x, pc: 0x&08x\r\n", id, pc);
@@ -78,6 +84,24 @@ void app_error_handler_bare(uint32_t error_code)
     (void)error_code;
     NRF_LOG_ERROR("received an error: 0x%08x!\r\n", error_code);
     NVIC_SystemReset();
+}
+
+static void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+    if (pin == UART_RX) {
+        if (action == NRF_GPIOTE_POLARITY_LOTOHI) {
+            nrf_drv_gpiote_out_set(UART_TX);
+        } else if (action == NRF_GPIOTE_POLARITY_HITOLO) {
+            nrf_drv_gpiote_out_clear(UART_TX);
+        } else {
+            if (nrf_drv_gpiote_in_is_set(UART_RX)) {
+                nrf_drv_gpiote_out_set(UART_TX);
+            } else {
+                nrf_drv_gpiote_out_clear(UART_TX);
+            }
+        }
+    }
+
 }
 
 static void _on_dfu_start() {
@@ -95,9 +119,44 @@ static void _on_dfu_start() {
     APP_ERROR_CHECK(err_code);
 
     nrf_drv_gpiote_out_set(25);
+
+    const nrf_drv_gpiote_out_config_t out_config2 = GPIOTE_CONFIG_OUT_TASK_TOGGLE(true); //Configure output TX
+    err_code = nrf_drv_gpiote_out_init(UART_TX, &out_config2);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_gpiote_out_set(UART_TX);
+
+    const nrf_drv_gpiote_in_config_t in_config = GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
+
+    err_code = nrf_drv_gpiote_in_init(UART_RX, &in_config, NULL);
+    APP_ERROR_CHECK(err_code);
+
+    err_code =  nrf_drv_ppi_channel_alloc(&ppi_channel);
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_drv_ppi_channel_assign(ppi_channel ,
+        nrf_drv_gpiote_in_event_addr_get(UART_RX),
+        nrf_drv_gpiote_out_task_addr_get(UART_TX)
+        );
+    APP_ERROR_CHECK(err_code);
+
+    err_code = nrf_drv_ppi_channel_enable(ppi_channel);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_gpiote_in_event_enable(UART_RX, false);
+    nrf_drv_gpiote_out_task_enable(UART_TX);
+
 }
 
 static void _on_dfu_end() {
+
+    nrf_drv_gpiote_in_event_enable(UART_RX, false);
+    nrf_drv_gpiote_out_task_disable(UART_TX);
+
+    ret_code_t err_code = nrf_drv_ppi_channel_disable(ppi_channel);
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_ppi_channel_free(ppi_channel);
 
     nrf_drv_gpiote_out_clear(25);
 
@@ -145,12 +204,7 @@ nrf_dfu_action_t m_dfu_action __attribute__ ((section(".noinit")))
 
 bool nrf_dfu_enter_check(void)
 {
-    // if (nrf_gpio_pin_read(BOOTLOADER_BUTTON) == 0)
-    // {
-    //     return true;
-    // }
-
-    NRF_LOG_INFO("In user nrf_dfu_enter_check\n");
+    NRF_LOG_DEBUG("In user nrf_dfu_enter_check\n");
 
     if (m_dfu_action.enter_buttonless_dfu && m_dfu_action.passcode == DFU_PASSCODE) {
 
