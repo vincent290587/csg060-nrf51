@@ -103,13 +103,16 @@ static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
         case NRF_PWR_MGMT_EVT_PREPARE_SYSOFF:
             nrf_drv_rtc_tick_enable(&rtc, false);
             nrf_drv_rtc_disable(&rtc);
-            nrf_drv_clock_lfclk_release();
-        break;
+            // nrf_drv_clock_lfclk_release();
+            break;
 
         case NRF_PWR_MGMT_EVT_PREPARE_WAKEUP:
             break;
 
         case NRF_PWR_MGMT_EVT_PREPARE_DFU:
+            nrf_drv_rtc_tick_enable(&rtc, false);
+            nrf_drv_rtc_disable(&rtc);
+            // nrf_drv_clock_lfclk_release();
             break;
     }
 

@@ -5,10 +5,9 @@
 #define NRF_LOG_MODULE_NAME "DFU"
 
 #include <nrf_pwr_mgmt.h>
-
+#include <nrf_delay.h>
 #include "dfu_mgmt.h"
 #include "dfu_mgmt_types.h"
-
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
@@ -22,12 +21,26 @@ void dfu_mgmt__init(void) {
     m_dfu_action.passcode = 0;
 }
 
-static void dfu_mgmt__enter_dfu(void) {
+static bool dfu_mgmt__enter_dfu(void) {
 
-    NRF_LOG_INFO("Preparing for starting DFU\n");
+    static int counter = 0;
 
-    m_dfu_action.passcode = DFU_PASSCODE;
-    m_dfu_action.enter_buttonless_dfu = 1;
+    if (++counter >= 2) {
+
+        NRF_LOG_WARNING("Preparing for starting DFU\n");
+        NRF_LOG_FINAL_FLUSH();
+
+        m_dfu_action.passcode = DFU_PASSCODE;
+        m_dfu_action.enter_buttonless_dfu = 1;
+
+        NVIC_SystemReset();
+
+        return true;
+    }
+
+    nrf_delay_ms(10);
+
+    return false;
 }
 
 /**
@@ -35,7 +48,6 @@ static void dfu_mgmt__enter_dfu(void) {
  */
 static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 {
-    uint32_t err_code;
 
     switch (event)
     {
@@ -46,8 +58,7 @@ static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
             break;
 
         case NRF_PWR_MGMT_EVT_PREPARE_DFU:
-            dfu_mgmt__enter_dfu(); // indicate we want to enter DFU
-            return true;
+            return dfu_mgmt__enter_dfu(); // indicate if we want to enter DFU
             break;
     }
 
