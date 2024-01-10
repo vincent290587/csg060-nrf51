@@ -7,14 +7,14 @@ MEMORY
 {
   /** Flash start address for the bootloader. This setting will also be stored in UICR to allow the
    *  MBR to init the bootloader when starting the system. This value must correspond to
-   *  BOOTLOADER_REGION_START found in dfu_types.h. The system is prevented from starting up if
-   *  those values do not match. The check is performed in main.c, see
-   *  APP_ERROR_CHECK_BOOL(*((uint32_t *)NRF_UICR_BOOTLOADER_START_ADDRESS) == BOOTLOADER_REGION_START);
+   *  BOOTLOADER_REGION_START found in dfu_types.h.
    */
   FLASH (rx) : ORIGIN = 0x30000, LENGTH = 0xFC00
 
+  RTT_CB (rwx) :  ORIGIN = 0x20002B00, LENGTH = 0x100
+
   /** RAM Region for bootloader. This setting is suitable when used with s110, s120, s130, s310. */
-  RAM (rwx) :  ORIGIN = 0x20002C00, LENGTH = 0x5380
+  RAM (rwx) :  ORIGIN = 0x20002C00, LENGTH = 0x5300
 
   /** Location of non initialized RAM. Non initialized RAM is used for exchanging bond information
    *  from application to bootloader when using buttonless DFU OTA.
@@ -45,7 +45,7 @@ SECTIONS
   /* No init RAM section in bootloader. Used for bond information exchange. */
   .noinit(NOLOAD) :
   {
-
+    KEEP(*(.noinit))
   } > NOINIT
   /* other placements follow here... */
 }
@@ -75,6 +75,11 @@ SECTIONS
     KEEP(*(.dfu_trans))
     PROVIDE(__stop_dfu_trans = .);
   } > RAM
+
+  .rttSection :
+  {
+    SEGGER_RTT.c.*(.bss._SEGGER_RTT)
+  } > RTT_CB
 
 } INSERT AFTER .data
 

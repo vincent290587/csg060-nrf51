@@ -47,10 +47,15 @@
  *
  */
 
+#define NRF_LOG_MODULE_NAME "DFU_MAIN"
+
+#include <app_scheduler.h>
 #include <dfu_mgmt_types.h>
 #include <nrf_dfu_types.h>
 #include <nrf_dfu_settings.h>
 #include <stdint.h>
+#include <drivers_nrf/gpiote/nrf_drv_gpiote.h>
+
 #include "boards.h"
 #include "nrf_mbr.h"
 #include "nrf_bootloader.h"
@@ -75,23 +80,62 @@ void app_error_handler_bare(uint32_t error_code)
     NVIC_SystemReset();
 }
 
+static void _on_dfu_start() {
 
-/**@brief Function for initialization of LEDs.
- */
-static void leds_init(void)
-{
-    bsp_board_leds_init();
-    bsp_board_led_on(BSP_BOARD_LED_2);
+    if (NRF_WDT->RUNSTATUS) {
+        NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+    }
+
+    ret_code_t err_code = nrf_drv_gpiote_init();
+    APP_ERROR_CHECK(err_code);
+
+    //Initialize output pin
+    const nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(true); //Configure output LED
+    err_code = nrf_drv_gpiote_out_init(25, &out_config);                       //Initialize output button
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_gpiote_out_set(25);
 }
 
+static void _on_dfu_end() {
 
-/**@brief Function for initializing the button module.
- */
-static void buttons_init(void)
+    nrf_drv_gpiote_out_clear(25);
+
+    nrf_drv_gpiote_uninit();
+}
+
+extern void __real_app_sched_execute();
+
+void __wrap_app_sched_execute()
 {
-    nrf_gpio_cfg_sense_input(BOOTLOADER_BUTTON,
-                             BUTTON_PULL,
-                             NRF_GPIO_PIN_SENSE_LOW);
+    // Transport is waiting for event?
+    while(true)
+    {
+        if (NRF_WDT->RUNSTATUS) {
+            NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+        }
+        // Can't be emptied like this because of lack of static variables
+        __real_app_sched_execute();
+    }
+}
+
+extern fs_ret_t __real_nrf_dfu_flash_erase(uint32_t const * p_dest, uint32_t num_pages, dfu_flash_callback_t callback);
+
+fs_ret_t __wrap_nrf_dfu_flash_erase(uint32_t const * p_dest, uint32_t num_pages, dfu_flash_callback_t callback) {
+
+    if (NRF_WDT->RUNSTATUS) {
+        NRF_WDT->RR[0] = WDT_RR_RR_Reload;
+    }
+    return __real_nrf_dfu_flash_erase(p_dest, num_pages, callback);
+}
+
+extern void __real_nrf_bootloader_app_start(uint32_t start_addr);
+
+void __wrap_nrf_bootloader_app_start(uint32_t start_addr) {
+
+    _on_dfu_end();
+
+    __real_nrf_bootloader_app_start(start_addr);
 }
 
 extern nrf_dfu_settings_t s_dfu_settings;
@@ -106,11 +150,21 @@ bool nrf_dfu_enter_check(void)
     //     return true;
     // }
 
+    NRF_LOG_INFO("In user nrf_dfu_enter_check\n");
+
     if (m_dfu_action.enter_buttonless_dfu && m_dfu_action.passcode == DFU_PASSCODE) {
+
+        NRF_LOG_WARNING("Found DFU passcode\n");
+
         m_dfu_action.enter_buttonless_dfu = 0;
         m_dfu_action.passcode = 0;
         return true;
+    } else {
+
+        NRF_LOG_INFO("DFU passcode: 0x%08lX\n", m_dfu_action.passcode);
     }
+
+    NRF_LOG_FLUSH();
 
     m_dfu_action.enter_buttonless_dfu = 0;
     m_dfu_action.passcode = 0;
@@ -130,15 +184,14 @@ int main(void)
 {
     uint32_t ret_val;
 
-    (void) NRF_LOG_INIT(NULL);
+    NRF_LOG_INIT(NULL);
 
     NRF_LOG_INFO("Inside main\n");
 
     NRF_LOG_INFO("Softdevice size 0x%lX \n", SD_SIZE_GET(MBR_SIZE));
     NRF_LOG_INFO("Softdevice FWID 0x%lX \n", SD_FWID_GET(MBR_SIZE));
 
-    // leds_init();
-    // buttons_init();
+    _on_dfu_start();
 
     ret_val = nrf_bootloader_init();
     APP_ERROR_CHECK(ret_val);
