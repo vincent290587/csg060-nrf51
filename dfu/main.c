@@ -163,6 +163,15 @@ static void _on_dfu_end() {
     nrf_drv_gpiote_uninit();
 }
 
+static void _check_timeout() {
+
+    volatile uint32_t counter = NRF_RTC0->COUNTER; // 512 seconds overflow
+    if (counter > (32768uL * 300uL)) { // 300 seconds timeout
+        NRF_LOG_INFO("Timeout !");
+        NVIC_SystemReset();
+    }
+}
+
 extern void __real_app_sched_execute();
 
 void __wrap_app_sched_execute()
@@ -173,6 +182,7 @@ void __wrap_app_sched_execute()
         if (NRF_WDT->RUNSTATUS) {
             NRF_WDT->RR[0] = WDT_RR_RR_Reload;
         }
+        _check_timeout();
         // Can't be emptied like this because of lack of static variables
         __real_app_sched_execute();
     }
