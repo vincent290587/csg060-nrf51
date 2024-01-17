@@ -68,9 +68,6 @@
 #include "app_error_weak.h"
 #include "nrf_bootloader_info.h"
 
-#define UART_RX 3
-#define UART_TX 4
-
 nrf_ppi_channel_t ppi_channel;
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
@@ -115,10 +112,10 @@ static void _on_dfu_start() {
 
     //Initialize output pin
     const nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(true); //Configure output LED
-    err_code = nrf_drv_gpiote_out_init(25, &out_config);                       //Initialize output button
+    err_code = nrf_drv_gpiote_out_init(LED_PIN, &out_config);                       //Initialize output button
     APP_ERROR_CHECK(err_code);
 
-    nrf_drv_gpiote_out_set(25);
+    nrf_drv_gpiote_out_set(LED_PIN);
 
     const nrf_drv_gpiote_out_config_t out_config2 = GPIOTE_CONFIG_OUT_TASK_TOGGLE(true); //Configure output TX
     err_code = nrf_drv_gpiote_out_init(UART_TX, &out_config2);
@@ -158,7 +155,7 @@ static void _on_dfu_end() {
 
     nrf_drv_ppi_channel_free(ppi_channel);
 
-    nrf_drv_gpiote_out_clear(25);
+    nrf_drv_gpiote_out_clear(LED_PIN);
 
     nrf_drv_gpiote_uninit();
 }

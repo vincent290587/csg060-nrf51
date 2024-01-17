@@ -21,7 +21,8 @@
 
 #include "os_time.h"
 
-#define WAKE_PIN 3
+
+#define WAKE_PIN    UART_RX
 
 
 nrf_drv_wdt_channel_id m_channel_id;

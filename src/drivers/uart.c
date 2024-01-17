@@ -102,13 +102,13 @@ void uart_init(p_wait_func_t pFunc) {
     os_time_t last_recv_off = 0;
 
     const app_uart_comm_params_t comm_params = {
-        .rx_pin_no = 3, // D0 is TX
-        .tx_pin_no = 4, // D1 is RX
+        .rx_pin_no = UART_RX, // D0 is TX
+        .tx_pin_no = UART_TX, // D1 is RX
         NRF_UART_PSEL_DISCONNECTED,
         NRF_UART_PSEL_DISCONNECTED,
         APP_UART_FLOW_CONTROL_DISABLED,
         false,
-        UART_BAUDRATE_BAUDRATE_Baud115200 // byte duration: 8.333 ms
+        UART_BAUDRATE_BAUDRATE_Baud1200 // byte duration: 8.333 ms
     };
 
     APP_UART_FIFO_INIT(&comm_params,
