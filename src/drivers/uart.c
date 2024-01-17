@@ -24,10 +24,10 @@
 #define UART_RX_BUF_SIZE 32u
 #define UART_TX_BUF_SIZE 32u
 
-#define UART_PASSTHROUGH 1 // TODO remove
+#define UART_PASSTHROUGH 0
 
 #define UART_RECV_TIMEOUT_MS    ((os_time_t)15)
-#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)5000) // TODO decrease
+#define UART_SYSOFF_TIMEOUT_MS  ((os_time_t)60000)
 
 extern uint32_t app_uart_put_buffer(const uint8_t * const p_buffer, size_t length);
 
@@ -50,8 +50,10 @@ static void uart_error_handle(app_uart_evt_t * p_event)
 // https://github.com/EBiCS/EBiCS_Firmware/blob/master/Src/display_bafang.c
 
 enum {
+    CSG060_CMD__LEVEL = 0x0B,
     CSG060_CMD__STARTREQUEST = 0x11,
     CSG060_CMD__STARTINFO = 0x16,
+    CSG060_CMD__LIGHT = 0x1A,
 };
 
 enum {
@@ -83,10 +85,20 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
         NRF_LOG_INFO("MAX RPM command detected: upgrading speed\n");
         // Default value is BD hex which is 189 rpm. Wheel diameter for a 700C-38 tire is around 2.18 mtrs
         // This leads to a top speed of 189 * 2.18 * 60 / 1000 kph = 24.7 kph
-        const uint8_t new_buffer[] = {CSG060_CMD__STARTINFO, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27}; // 16+1F+00+F2 = 27
+        const uint8_t new_buffer[] = {CSG060_CMD__STARTINFO, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27}; // 16h+1Fh+00h+F2h = 27h
         ret_code_t err_code = app_uart_put_buffer(new_buffer, sizeof(new_buffer));
         APP_ERROR_CHECK(err_code);
     } else if (p_data->cmd == CSG060_CMD__STARTREQUEST || p_data->cmd == CSG060_CMD__STARTINFO) {
+        switch (p_data->cmd) {
+            case CSG060_CMD__LEVEL:
+                NRF_LOG_INFO("CSG060_CMD__LEVEL\n");
+            break;
+            case CSG060_CMD__LIGHT:
+                NRF_LOG_INFO("CSG060_CMD__LIGHT\n");
+            break;
+            default:
+                break;
+        }
         const ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
         APP_ERROR_CHECK(err_code);
     } else {

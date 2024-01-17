@@ -168,17 +168,17 @@ int main(void)
 
     uart_init(_wait_func);
 
+#ifdef DEBUG
     int count = 50;
     while (count--) {
         nrf_drv_gpiote_out_toggle(24);
         nrf_delay_ms(50);
     }
     nrf_drv_gpiote_out_clear(24);
+#endif
 
     NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
     NRF_LOG_FLUSH();
-
-    nrf_delay_ms(50);
 
 #if WDT_ENABLED
     nrf_drv_wdt_channel_feed(m_channel_id);
