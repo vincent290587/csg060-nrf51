@@ -1093,6 +1093,12 @@
 #endif //PPI_ENABLED
 // </e>
 
+// <q> BLE_NUS_ENABLED  - ble_nus - Nordic UART Service
+
+#ifndef BLE_NUS_ENABLED
+#define BLE_NUS_ENABLED 1
+#endif
+
 // <<< end of configuration section >>>
 #endif //SDK_CONFIG_H
 

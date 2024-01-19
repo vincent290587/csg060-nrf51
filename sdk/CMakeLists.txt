@@ -10,6 +10,7 @@ set(SDK_INC
         ${SDK_ROOT}/components/drivers_nrf/wdt
         ${SDK_ROOT}/components/libraries/pwr_mgmt
         ${SDK_ROOT}/components/libraries/experimental_section_vars
+        ${SDK_ROOT}/components/libraries/timer
         ${SDK_ROOT}/components
         ${SDK_ROOT}/components/libraries/util
         ${SDK_ROOT}/components/toolchain/gcc
@@ -37,6 +38,12 @@ if (USE_SOFTDEVICE)
             ${SDK_ROOT}/components/softdevice/s130/headers
             ${SDK_ROOT}/components/softdevice/s130/headers/nrf51
             ${SDK_ROOT}/components/softdevice/common/softdevice_handler
+
+            ${SDK_ROOT}/components/ble/nrf_ble_qwr
+            ${SDK_ROOT}/components/ble/peer_manager
+            ${SDK_ROOT}/components/ble/ble_services/ble_nus
+            ${SDK_ROOT}/components/ble/ble_advertising
+            ${SDK_ROOT}/components/ble/common
     )
 
 else()
@@ -65,6 +72,7 @@ set(SRC
     ${SDK_ROOT}/components/libraries/util/nrf_assert.c
     ${SDK_ROOT}/components/libraries/uart/retarget.c
     ${SDK_ROOT}/components/libraries/util/sdk_errors.c
+    ${SDK_ROOT}/components/libraries/timer/app_timer.c
     ${SDK_ROOT}/components/libraries/pwr_mgmt/nrf_pwr_mgmt.c
     ${SDK_ROOT}/components/libraries/hardfault/nrf51/handler/hardfault_handler_gcc.c
     ${SDK_ROOT}/components/libraries/hardfault/hardfault_implementation.c
@@ -84,6 +92,15 @@ if (USE_SOFTDEVICE)
     list(APPEND SRC
             ${SDK_ROOT}/components/softdevice/common/softdevice_handler/softdevice_handler.c
             ${SDK_ROOT}/components/softdevice/common/softdevice_handler/softdevice_handler_appsh.c
+
+            ${SDK_ROOT}/components/ble/common/ble_advdata.c
+            ${SDK_ROOT}/components/ble/ble_advertising/ble_advertising.c
+            ${SDK_ROOT}/components/ble/common/ble_conn_params.c
+            ${SDK_ROOT}/components/ble/common/ble_srv_common.c
+            ${SDK_ROOT}/components/ble/ble_services/ble_nus/ble_nus.c
+            ${SDK_ROOT}/components/ble/common/ble_advdata.c
+            ${SDK_ROOT}/components/ble/common/ble_conn_params.c
+            ${SDK_ROOT}/components/ble/common/ble_srv_common.c
     )
 
 endif(USE_SOFTDEVICE)
