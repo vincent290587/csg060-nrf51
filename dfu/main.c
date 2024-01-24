@@ -101,6 +101,8 @@ static void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t actio
 
 }
 
+_Static_assert (UART_RX != UART_TX, "Wrong pin selection");
+
 static void _on_dfu_start() {
 
     if (NRF_WDT->RUNSTATUS) {

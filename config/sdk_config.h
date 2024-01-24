@@ -413,12 +413,12 @@
 
 // <o> NRF_LOG_BACKEND_SERIAL_UART_TX_PIN - UART TX pin 
 #ifndef NRF_LOG_BACKEND_SERIAL_UART_TX_PIN
-#define NRF_LOG_BACKEND_SERIAL_UART_TX_PIN 9
+#define NRF_LOG_BACKEND_SERIAL_UART_TX_PIN 4
 #endif
 
 // <o> NRF_LOG_BACKEND_SERIAL_UART_RX_PIN - UART RX pin 
 #ifndef NRF_LOG_BACKEND_SERIAL_UART_RX_PIN
-#define NRF_LOG_BACKEND_SERIAL_UART_RX_PIN 11
+#define NRF_LOG_BACKEND_SERIAL_UART_RX_PIN 3
 #endif
 
 // <o> NRF_LOG_BACKEND_SERIAL_UART_RTS_PIN - UART RTS pin 
@@ -1093,10 +1093,104 @@
 #endif //PPI_ENABLED
 // </e>
 
+// <e> APP_SCHEDULER_ENABLED - app_scheduler - Events scheduler
+//==========================================================
+#ifndef APP_SCHEDULER_ENABLED
+#define APP_SCHEDULER_ENABLED 1
+#endif
+#if  APP_SCHEDULER_ENABLED
+// <q> APP_SCHEDULER_WITH_PAUSE  - Enabling pause feature
+
+
+#ifndef APP_SCHEDULER_WITH_PAUSE
+#define APP_SCHEDULER_WITH_PAUSE 1
+#endif
+
+// <q> APP_SCHEDULER_WITH_PROFILER  - Enabling scheduler profiling
+
+
+#ifndef APP_SCHEDULER_WITH_PROFILER
+#define APP_SCHEDULER_WITH_PROFILER 0
+#endif
+
+#endif //APP_SCHEDULER_ENABLED
+// </e>
+
+// <e> APP_TIMER_ENABLED - app_timer - Application timer functionality
+//==========================================================
+#ifndef APP_TIMER_ENABLED
+#define APP_TIMER_ENABLED 1
+#endif
+#if  APP_TIMER_ENABLED
+// <q> APP_TIMER_WITH_PROFILER  - Enable app_timer profiling
+
+
+#ifndef APP_TIMER_WITH_PROFILER
+#define APP_TIMER_WITH_PROFILER 0
+#endif
+
+// <q> APP_TIMER_KEEPS_RTC_ACTIVE  - Enable RTC always on
+
+
+// <i> If option is enabled RTC is kept running even if there is no active timers.
+// <i> This option can be used when app_timer is used for timestamping.
+
+#ifndef APP_TIMER_KEEPS_RTC_ACTIVE
+#define APP_TIMER_KEEPS_RTC_ACTIVE 0
+#endif
+
+#endif //APP_TIMER_ENABLED
+// </e>
+
+// <e> FSTORAGE_ENABLED - fstorage - Flash storage module
+//==========================================================
+#ifndef FSTORAGE_ENABLED
+#define FSTORAGE_ENABLED 1
+#endif
+#if  FSTORAGE_ENABLED
+// <o> FS_QUEUE_SIZE - Configures the size of the internal queue.
+// <i> Increase this if there are many users, or if it is likely that many
+// <i> operation will be queued at once without waiting for the previous operations
+// <i> to complete. In general, increase the queue size if you frequently receive
+// <i> @ref FS_ERR_QUEUE_FULL errors when calling @ref fs_store or @ref fs_erase.
+
+#ifndef FS_QUEUE_SIZE
+#define FS_QUEUE_SIZE 4
+#endif
+
+// <o> FS_OP_MAX_RETRIES - Number attempts to execute an operation if the SoftDevice fails.
+// <i> Increase this value if events return the @ref FS_ERR_OPERATION_TIMEOUT
+// <i> error often. The SoftDevice may fail to schedule flash access due to high BLE activity.
+
+#ifndef FS_OP_MAX_RETRIES
+#define FS_OP_MAX_RETRIES 3
+#endif
+
+// <o> FS_MAX_WRITE_SIZE_WORDS - Maximum number of words to be written to flash in a single operation.
+// <i> Tweaking this value can increase the chances of the SoftDevice being
+// <i> able to fit flash operations in between radio activity. This value is bound by the
+// <i> maximum number of words which the SoftDevice can write to flash in a single call to
+// <i> @ref sd_flash_write, which is 256 words for nRF51 ICs and 1024 words for nRF52 ICs.
+
+#ifndef FS_MAX_WRITE_SIZE_WORDS
+#define FS_MAX_WRITE_SIZE_WORDS 256
+#endif
+
+#endif //FSTORAGE_ENABLED
+// </e>
+
 // <q> BLE_NUS_ENABLED  - ble_nus - Nordic UART Service
 
 #ifndef BLE_NUS_ENABLED
 #define BLE_NUS_ENABLED 1
+#endif
+
+//==========================================================
+// <q> BLE_ADVERTISING_ENABLED  - ble_advertising - Advertising module
+
+
+#ifndef BLE_ADVERTISING_ENABLED
+#define BLE_ADVERTISING_ENABLED 1
 #endif
 
 // <<< end of configuration section >>>

@@ -49,6 +49,8 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMENT "Building ${HEX_FILE} Building ${BIN_FILE}"
         COMMAND ${CMAKE_SIZE_UTIL} --format=berkeley ${PROJECT_NAME}
         COMMENT "Invoking: Print Size"
+
+        COMMAND ${NRFUTIL} settings generate --no-backup --family NRF51 --application-version 1 --application ${PROJECT_NAME}.hex --bootloader-version 1 --bl-settings-version 1 settings_dfu.hex
 )
 
 find_program(NRFUTIL "nrfutil")
@@ -73,7 +75,17 @@ if (NOT USE_SOFTDEVICE)
             # Build app first
             COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
             #Then program
-            COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase
+            COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase --verify
+            COMMAND ${NRFJPROG} --reset -f nrf51
+    )
+else()
+    add_custom_target(flash
+            DEPENDS ${PROJECT_NAME}.hex
+            # Build app first
+            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+            #Then program
+            COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.hex -f nrf51 --sectorerase --verify
+            COMMAND ${NRFJPROG} --program settings_dfu.hex -f nrf51 --sectorerase --verify
             COMMAND ${NRFJPROG} --reset -f nrf51
     )
 endif(NOT USE_SOFTDEVICE)

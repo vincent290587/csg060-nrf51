@@ -29,6 +29,7 @@ set(SDK_INC
         ${SDK_ROOT}/components/toolchain/cmsis/include
         ${SDK_ROOT}/components/drivers_nrf/hal
         ${SDK_ROOT}/components/libraries/log/src
+        ${SDK_ROOT}/components/libraries/fstorage
         ${CMAKE_SOURCE_DIR}/src/config
 )
 
@@ -69,6 +70,9 @@ set(SRC
     ${SDK_ROOT}/components/libraries/scheduler/app_scheduler.c
     ${SDK_ROOT}/components/libraries/util/app_util_platform.c
     ${SDK_ROOT}/components/drivers_nrf/ppi/nrf_drv_ppi.c
+    ${SDK_ROOT}/components/libraries/fstorage/fstorage.c
+    ${SDK_ROOT}/components/libraries/timer/app_timer.c
+    ${SDK_ROOT}/components/libraries/timer/app_timer_appsh.c
     ${SDK_ROOT}/components/libraries/util/nrf_assert.c
     ${SDK_ROOT}/components/libraries/uart/retarget.c
     ${SDK_ROOT}/components/libraries/util/sdk_errors.c
@@ -100,6 +104,7 @@ if (USE_SOFTDEVICE)
             ${SDK_ROOT}/components/ble/ble_services/ble_nus/ble_nus.c
             ${SDK_ROOT}/components/ble/common/ble_advdata.c
             ${SDK_ROOT}/components/ble/common/ble_conn_params.c
+            ${SDK_ROOT}/components/ble/common/ble_conn_state.c
             ${SDK_ROOT}/components/ble/common/ble_srv_common.c
     )
 

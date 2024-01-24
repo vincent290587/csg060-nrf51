@@ -3,13 +3,17 @@
 //
 
 
-#define NRF_LOG_MODULE_NAME "UART"
+#define NRF_LOG_MODULE_NAME "BLE"
 
 #include "ble_app.h"
 
+#ifdef BLE_STACK_SUPPORT_REQD
+
+#include <app_scheduler.h>
 #include <app_timer.h>
 #include <nrf_drv_uart.h>
 #include <pca10028.h>
+#include <softdevice_handler_appsh.h>
 #include <stdbool.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -27,8 +31,6 @@
 #include "nrf_log.h"
 #include "nrf_log_ctrl.h"
 
-#include "os_time.h"
-
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #define IS_SRVC_CHANGED_CHARACT_PRESENT 0                                           /**< Include the service_changed characteristic. If not enabled, the server's database cannot be changed for the lifetime of the device. */
@@ -45,8 +47,11 @@
 #define DEVICE_NAME                     "CSG060_BLE"                               /**< Name of device. Will be included in the advertising data. */
 #define NUS_SERVICE_UUID_TYPE           BLE_UUID_TYPE_VENDOR_BEGIN                  /**< UUID type for the Nordic UART Service (vendor specific). */
 
-#define APP_ADV_INTERVAL                64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 40 ms). */
-#define APP_ADV_TIMEOUT_IN_SECONDS      180                                         /**< The advertising timeout (in units of seconds). */
+#define APP_ADV_FAST_INTERVAL           64                                          /**< The advertising interval (in units of 0.625 ms. This value corresponds to 25 ms). */
+#define APP_ADV_FAST_TIMEOUT            60                                          /**< The duration of the fast advertising period (in seconds). */
+
+#define APP_ADV_SLOW_INTERVAL           3200                                        /**< Slow advertising interval (in units of 0.625 ms. This value corresponds to 2 seconds). */
+#define APP_ADV_SLOW_TIMEOUT            300                                         /**< The advertising timeout in units of seconds. */
 
 #define APP_TIMER_PRESCALER             0                                           /**< Value of the RTC1 PRESCALER register. */
 #define APP_TIMER_OP_QUEUE_SIZE         4                                           /**< Size of timer operation queues. */
@@ -149,25 +154,37 @@ static void advertising_init(void)
 {
     uint32_t               err_code;
     ble_advdata_t          advdata;
-    ble_advdata_t          scanrsp;
+    // ble_advdata_t          scanrsp;
     ble_adv_modes_config_t options;
 
     // Build advertising data struct to pass into @ref ble_advertising_init.
     memset(&advdata, 0, sizeof(advdata));
-    advdata.name_type          = BLE_ADVDATA_FULL_NAME;
-    advdata.include_appearance = false;
-    advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
 
-    memset(&scanrsp, 0, sizeof(scanrsp));
-    scanrsp.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
-    scanrsp.uuids_complete.p_uuids  = m_adv_uuids;
+    // advdata.name_type          = BLE_ADVDATA_FULL_NAME;
+    // advdata.include_appearance = false;
+    // advdata.flags              = BLE_GAP_ADV_FLAGS_LE_ONLY_LIMITED_DISC_MODE;
+
+    advdata.name_type               = BLE_ADVDATA_FULL_NAME;
+    advdata.include_appearance      = true;
+    advdata.flags                   = BLE_GAP_ADV_FLAGS_LE_ONLY_GENERAL_DISC_MODE;
+    advdata.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    advdata.uuids_complete.p_uuids  = m_adv_uuids;
+
+    // memset(&scanrsp, 0, sizeof(scanrsp));
+    // scanrsp.uuids_complete.uuid_cnt = sizeof(m_adv_uuids) / sizeof(m_adv_uuids[0]);
+    // scanrsp.uuids_complete.p_uuids  = m_adv_uuids;
 
     memset(&options, 0, sizeof(options));
-    options.ble_adv_fast_enabled  = true;
-    options.ble_adv_fast_interval = APP_ADV_INTERVAL;
-    options.ble_adv_fast_timeout  = APP_ADV_TIMEOUT_IN_SECONDS;
 
-    err_code = ble_advertising_init(&advdata, &scanrsp, &options, on_adv_evt, NULL);
+    options.ble_adv_fast_enabled  = true;
+    options.ble_adv_fast_interval = APP_ADV_FAST_INTERVAL;
+    options.ble_adv_fast_timeout  = APP_ADV_FAST_TIMEOUT;
+
+    options.ble_adv_slow_enabled  = true;
+    options.ble_adv_slow_interval = APP_ADV_SLOW_INTERVAL;
+    options.ble_adv_slow_timeout  = APP_ADV_SLOW_TIMEOUT;
+
+    err_code = ble_advertising_init(&advdata, NULL, &options, on_adv_evt, NULL);
     APP_ERROR_CHECK(err_code);
 }
 
@@ -183,7 +200,35 @@ static void advertising_init(void)
 /**@snippet [Handling the data received over BLE] */
 static void nus_data_handler(ble_nus_t * p_nus, uint8_t * p_data, uint16_t length)
 {
-    // TODO
+    if (!p_data || length < 1) {
+        return;
+    }
+
+    NRF_LOG_INFO("Got NUS data: \n");
+    NRF_LOG_HEXDUMP_INFO(p_data, length);
+
+    switch (p_data[0])
+    {
+        case 0xEA: {
+
+            NRF_LOG_INFO("Device is preparing to enter bootloader mode.");
+            NRF_LOG_FLUSH();
+
+            uint32_t err_code;
+            err_code = sd_ble_gap_disconnect(m_conn_handle,
+                                                 BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+            if (err_code != NRF_ERROR_INVALID_STATE)
+            {
+                APP_ERROR_CHECK(err_code);
+            }
+
+            nrf_pwr_mgmt_shutdown(NRF_PWR_MGMT_SHUTDOWN_GOTO_DFU);
+        }
+        break;
+
+        default:
+            break;
+    }
 }
 
 /**@brief Function for initializing services that will be used by the application.
@@ -346,10 +391,8 @@ static void ble_stack_init(void)
 {
     uint32_t err_code;
 
-    nrf_clock_lf_cfg_t clock_lf_cfg = NRF_CLOCK_LFCLKSRC;
-
-    // Initialize SoftDevice.
-    SOFTDEVICE_HANDLER_INIT(&clock_lf_cfg, NULL);
+    // Initialize the SoftDevice handler module.
+    SOFTDEVICE_HANDLER_APPSH_INIT(NULL, true);
 
     ble_enable_params_t ble_enable_params;
     err_code = softdevice_enable_get_default_config(CENTRAL_LINK_COUNT,
@@ -372,10 +415,13 @@ static void ble_stack_init(void)
     APP_ERROR_CHECK(err_code);
 }
 
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 void ble_app__init(void) {
 
+#ifdef BLE_STACK_SUPPORT_REQD
     uint32_t err_code;
 
     ble_stack_init();
@@ -384,7 +430,7 @@ void ble_app__init(void) {
     advertising_init();
     conn_params_init();
 
-    printf("\r\nUART Start!\r\n");
     err_code = ble_advertising_start(BLE_ADV_MODE_FAST);
     APP_ERROR_CHECK(err_code);
+#endif
 }

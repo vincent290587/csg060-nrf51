@@ -8,6 +8,10 @@
 #include <stdint.h>
 
 #include "os_time.h"
+
+#include <app_timer.h>
+#include <app_timer_appsh.h>
+
 #include "nrf.h"
 #include "bsp.h"
 #include "boards.h"
@@ -20,6 +24,7 @@
 #include "nrf_drv_rtc.h"
 #include "nrf_drv_clock.h"
 
+#if APP_TIMER_ENABLED==0
 
 #define RTC_PRESCALER          ((RTC_DEFAULT_CONFIG_FREQUENCY + (TICK_FREQ >> 1)) / TICK_FREQ) // rounded number
 
@@ -120,3 +125,49 @@ static bool _app_shutdown_handler(nrf_pwr_mgmt_evt_t event)
 }
 
 NRF_PWR_MGMT_REGISTER_HANDLER(m_app_shutdown_handler) = _app_shutdown_handler;
+
+#else
+
+#define APP_TIMER_PRESCALER             0                                          /**< Value of the RTC1 PRESCALER register. */
+#define APP_TIMER_OP_QUEUE_SIZE         4                                          /**< Size of timer operation queues. */
+
+#define TIMEOUT_TICKS                   10
+
+#define APP_TICK_EVENT_INTERVAL         APP_TIMER_TICKS(TIMEOUT_TICKS, APP_TIMER_PRESCALER)
+
+APP_TIMER_DEF(m_tick_timer);
+
+static volatile uint32_t m_ticks;
+
+static void tick_timeout_handler(void * p_context) {
+    m_ticks += TIMEOUT_TICKS;
+}
+
+
+/** @brief Function starting the internal LFCLK XTAL oscillator.
+ */
+static void lfclk_config(void)
+{
+    ret_code_t err_code = nrf_drv_clock_init();
+    APP_ERROR_CHECK(err_code);
+
+    nrf_drv_clock_lfclk_request(NULL);
+}
+
+void os_time__init() {
+
+    lfclk_config();
+
+    // Initialize timer module, making it use the scheduler.
+    APP_TIMER_APPSH_INIT(APP_TIMER_PRESCALER, APP_TIMER_OP_QUEUE_SIZE, false);
+
+    app_timer_create(&m_tick_timer, APP_TIMER_MODE_REPEATED, tick_timeout_handler);
+
+    app_timer_start(m_tick_timer, APP_TICK_EVENT_INTERVAL, NULL);
+}
+
+uint32_t os_get_millis() {
+    return m_ticks;
+}
+
+#endif

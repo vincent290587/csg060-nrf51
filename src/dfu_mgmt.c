@@ -25,7 +25,7 @@ static bool dfu_mgmt__enter_dfu(void) {
 
     static int counter = 0;
 
-    if (++counter >= 2) {
+    if (++counter >= 0) {
 
         NRF_LOG_WARNING("Preparing for starting DFU\n");
         NRF_LOG_FINAL_FLUSH();
@@ -33,7 +33,7 @@ static bool dfu_mgmt__enter_dfu(void) {
         m_dfu_action.passcode = DFU_PASSCODE;
         m_dfu_action.enter_buttonless_dfu = 1;
 
-        NVIC_SystemReset();
+        NVIC_SystemReset(); // takes care of resetting peripherals
 
         return true;
     }

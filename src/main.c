@@ -1,5 +1,7 @@
 #define NRF_LOG_MODULE_NAME "MAIN"
 
+#include <app_scheduler.h>
+#include <app_timer_appsh.h>
 #include <nrf_delay.h>
 #include <stdbool.h>
 #include <stdint.h>
@@ -21,6 +23,20 @@
 
 #include "os_time.h"
 
+#ifdef BLE_STACK_SUPPORT_REQD
+#include <ble_app.h>
+#include <ble_stack_handler_types.h>
+#else
+#define BLE_STACK_HANDLER_SCHED_EVT_SIZE 0
+#endif
+
+#define SCHED_MAX_EVENT_DATA_SIZE       MAX(APP_TIMER_SCHED_EVT_SIZE, BLE_STACK_HANDLER_SCHED_EVT_SIZE)               /**< Maximum size of scheduler events. */
+
+#ifdef SVCALL_AS_NORMAL_FUNCTION
+#define SCHED_QUEUE_SIZE                 20                                         /**< Maximum number of events in the scheduler queue. More is needed in case of Serialization. */
+#else
+#define SCHED_QUEUE_SIZE                10                                                        /**< Maximum number of events in the scheduler queue. */
+#endif
 
 #define WAKE_PIN    UART_RX
 
@@ -33,7 +49,30 @@ nrf_drv_wdt_channel_id m_channel_id;
  */
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
 {
-    NRF_LOG_ERROR("Fatal\r\n");
+    NRF_LOG_ERROR("app_error_fault_handler: \n");
+    NRF_LOG_ERROR("0x%08X - pc 0x%08X \n", id, pc, info);
+
+    assert_info_t * p_assert_info = (assert_info_t *)info;
+    error_info_t * p_error_info = (error_info_t *)info;
+
+    switch (id) {
+        case NRF_FAULT_ID_SDK_ERROR:
+            NRF_LOG_ERROR("ERROR 0x%08X at %s:%u",
+                    p_error_info->err_code,
+                    (char*)p_error_info->p_file_name,
+                    p_error_info->line_num);
+            break;
+
+        case NRF_FAULT_ID_SDK_ASSERT:
+            NRF_LOG_ERROR("ASSERTION FAILED at %s:%u",
+                          (char*)p_assert_info->p_file_name,
+                          p_assert_info->line_num);
+            break;
+
+        default:
+            break;
+    }
+
     // On assert, the system can only recover with a reset.
 #ifndef DEBUG
     NVIC_SystemReset();
@@ -140,8 +179,12 @@ static void _wdt_enable(void) {
 static void _wait_func(void) {
 #if WDT_ENABLED
     nrf_drv_wdt_channel_feed(m_channel_id);
-    nrf_pwr_mgmt_run();
 #endif
+    app_sched_execute();
+    #ifdef BLE_STACK_SUPPORT_REQD
+
+    sd_app_evt_wait();
+    // nrf_pwr_mgmt_run();
 }
 
 int main(void)
@@ -163,18 +206,30 @@ int main(void)
 
     //Initialize output pin
     const nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(true); //Configure output LED
-    err_code = nrf_drv_gpiote_out_init(24, &out_config);                       //Initialize output button
+    err_code = nrf_drv_gpiote_out_init(LED_PIN_APP, &out_config);
     APP_ERROR_CHECK(err_code);
 
+    APP_SCHED_INIT(SCHED_MAX_EVENT_DATA_SIZE, SCHED_QUEUE_SIZE);
+
+    ble_app__init();
+
+    NRF_LOG_INFO("APP ready\n");
+
+#if 1
     uart_init(_wait_func);
+#else
+    while (os_get_millis() < 20000) {
+        _wait_func();
+    }
+#endif
 
 #ifdef DEBUG
     int count = 50;
     while (count--) {
-        nrf_drv_gpiote_out_toggle(24);
+        nrf_drv_gpiote_out_toggle(LED_PIN_APP);
         nrf_delay_ms(50);
     }
-    nrf_drv_gpiote_out_clear(24);
+    nrf_drv_gpiote_out_clear(LED_PIN_APP);
 #endif
 
     NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
@@ -190,6 +245,7 @@ int main(void)
 
 #if WDT_ENABLED
         nrf_drv_wdt_channel_feed(m_channel_id);
+        app_sched_execute();
 #endif
     }
 

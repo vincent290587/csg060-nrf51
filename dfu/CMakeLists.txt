@@ -106,14 +106,14 @@ add_custom_target(flash_dfu
         COMMAND ${NRFJPROG} --reset -f nrf51
 )
 
-add_custom_target(flash_all
-        DEPENDS ${PROJECT_NAME}
-        # Build app first
-        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
-        #Then program
-        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.elf -f nrf51 --sectorerase --verify
-        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}_settings.hex -f nrf51 --sectorerase --verify
-        COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/src/csg060_fw.hex -f nrf51 --sectorerase --verify
-        COMMAND ${NRFJPROG} --reset -f nrf51
-)
-add_dependencies(flash_all ${PROJECT_NAME})
+#add_custom_target(flash_all
+#        DEPENDS ${PROJECT_NAME}
+#        # Build app first
+#        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+#        #Then program
+#        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.elf -f nrf51 --sectorerase --verify
+#        COMMAND ${NRFJPROG} --program ${PROJECT_NAME}_settings.hex -f nrf51 --sectorerase --verify
+#        COMMAND ${NRFJPROG} --program ${CMAKE_BINARY_DIR}/src/csg060_fw.hex -f nrf51 --sectorerase --verify
+#        COMMAND ${NRFJPROG} --reset -f nrf51
+#)
+#add_dependencies(flash_all ${PROJECT_NAME})
