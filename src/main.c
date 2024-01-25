@@ -182,9 +182,12 @@ static void _wait_func(void) {
 #endif
     app_sched_execute();
     #ifdef BLE_STACK_SUPPORT_REQD
-
+#ifdef BLE_STACK_SUPPORT_REQD
     sd_app_evt_wait();
-    // nrf_pwr_mgmt_run();
+#else
+    nrf_pwr_mgmt_run();
+#endif
+
 }
 
 int main(void)
