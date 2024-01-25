@@ -132,9 +132,6 @@ void uart_init(p_wait_func_t pFunc) {
 
     APP_ERROR_CHECK(err_code);
 
-    const uint8_t _buffer_hello[] = "starting\n";
-    app_uart_put_buffer(_buffer_hello, sizeof(_buffer_hello)); // TODO remove
-
     uint8_t _buffer[128];
     size_t buffer_cnt = 0;
 
