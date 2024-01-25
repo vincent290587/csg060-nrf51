@@ -181,7 +181,6 @@ static void _wait_func(void) {
     nrf_drv_wdt_channel_feed(m_channel_id);
 #endif
     app_sched_execute();
-    #ifdef BLE_STACK_SUPPORT_REQD
 #ifdef BLE_STACK_SUPPORT_REQD
     sd_app_evt_wait();
 #else
@@ -232,8 +231,8 @@ int main(void)
         nrf_drv_gpiote_out_toggle(LED_PIN_APP);
         nrf_delay_ms(50);
     }
-    nrf_drv_gpiote_out_clear(LED_PIN_APP);
 #endif
+    nrf_drv_gpiote_out_clear(LED_PIN_APP);
 
     NRF_LOG_WARNING("Timeout, going to SYSOFF\n");
     NRF_LOG_FLUSH();
