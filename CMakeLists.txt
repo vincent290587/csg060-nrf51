@@ -20,14 +20,15 @@ if (USE_QEMU)
 
 endif(USE_QEMU)
 
-add_definitions(-DUART_RX=3)
-add_definitions(-DUART_TX=4)
-add_definitions(-DLED_PIN=25)
-add_definitions(-DLED_PIN_APP=24)
+#add_definitions(-DUART_RX=3)
+#add_definitions(-DUART_TX=4)
+#add_definitions(-DLED_PIN=25)
+#add_definitions(-DLED_PIN_APP=24)
 
-#add_definitions(-DUART_RX=1)
-#add_definitions(-DUART_TX=2)
-#add_definitions(-DLED_PIN=3)
+add_definitions(-DUART_RX=2)
+add_definitions(-DUART_TX=3)
+add_definitions(-DLED_PIN=12)
+add_definitions(-DLED_PIN_APP=8)
 
 add_subdirectory(config/)
 
