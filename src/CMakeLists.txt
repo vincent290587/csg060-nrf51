@@ -53,7 +53,7 @@ add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
         COMMAND ${NRFUTIL} settings generate --no-backup --family NRF51 --application-version 1 --application ${PROJECT_NAME}.hex --bootloader-version 1 --bl-settings-version 1 settings_dfu.hex
 )
 
-find_program(NRFUTIL "nrfutil")
+find_program(NRFUTIL "nrfutil" HINTS "C:/Tools/Nordic Semiconductor/nrf-command-line-tools/bin")
 find_program(NRFJPROG "nrfjprog")
 find_program(MERGEHEX "mergehex" HINTS "c:/Program Files (x86)/Nordic Semiconductor/nrf5x/bin")
 

@@ -69,6 +69,14 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
     app_uart_put_buffer(p_buffer, length);
 #else
 
+    static bool _activate_hack = false;
+
+    if (length < 3) {
+        const ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
+        APP_ERROR_CHECK(err_code);
+        return;
+    }
+
     struct {
         uint8_t cmd;
         uint8_t arg;
@@ -81,7 +89,7 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
     NRF_LOG_DEBUG("cmd: 0x%02X arg 0x%02X\n", p_data->cmd, p_data->arg);
 
     // handle MAX_RPM packet
-    if (p_data->cmd == CSG060_CMD__STARTINFO && p_data->arg == CSG060_ARG__MAX_RPM) {
+    if (_activate_hack && p_data->cmd == CSG060_CMD__STARTINFO && p_data->arg == CSG060_ARG__MAX_RPM) {
         NRF_LOG_INFO("MAX RPM command detected: upgrading speed\n");
         // Default value is BD hex which is 189 rpm. Wheel diameter for a 700C-38 tire is around 2.18 mtrs
         // This leads to a top speed of 189 * 2.18 * 60 / 1000 kph = 24.7 kph
@@ -89,10 +97,19 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
         ret_code_t err_code = app_uart_put_buffer(new_buffer, sizeof(new_buffer));
         APP_ERROR_CHECK(err_code);
     } else if (p_data->cmd == CSG060_CMD__STARTREQUEST || p_data->cmd == CSG060_CMD__STARTINFO) {
-        switch (p_data->cmd) {
+        switch (p_data->arg) {
             case CSG060_CMD__LEVEL:
                 NRF_LOG_INFO("CSG060_CMD__LEVEL\n");
-            break;
+                switch (p_data->payload[0]) {
+                    case 0x02:
+                    //case 0x03:
+                        _activate_hack = true;
+                        break;
+                    default:
+                        _activate_hack = false;
+                        break;
+                }
+                break;
             case CSG060_CMD__LIGHT:
                 NRF_LOG_INFO("CSG060_CMD__LIGHT\n");
             break;

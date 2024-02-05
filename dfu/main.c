@@ -68,6 +68,8 @@
 #include "app_error_weak.h"
 #include "nrf_bootloader_info.h"
 
+#define USE_PPI 1
+
 nrf_ppi_channel_t ppi_channel;
 
 void app_error_fault_handler(uint32_t id, uint32_t pc, uint32_t info)
@@ -81,24 +83,6 @@ void app_error_handler_bare(uint32_t error_code)
     (void)error_code;
     NRF_LOG_ERROR("received an error: 0x%08x!\r\n", error_code);
     NVIC_SystemReset();
-}
-
-static void in_pin_handler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
-{
-    if (pin == UART_RX) {
-        if (action == NRF_GPIOTE_POLARITY_LOTOHI) {
-            nrf_drv_gpiote_out_set(UART_TX);
-        } else if (action == NRF_GPIOTE_POLARITY_HITOLO) {
-            nrf_drv_gpiote_out_clear(UART_TX);
-        } else {
-            if (nrf_drv_gpiote_in_is_set(UART_RX)) {
-                nrf_drv_gpiote_out_set(UART_TX);
-            } else {
-                nrf_drv_gpiote_out_clear(UART_TX);
-            }
-        }
-    }
-
 }
 
 _Static_assert (UART_RX != UART_TX, "Wrong pin selection");
@@ -130,6 +114,8 @@ static void _on_dfu_start() {
     err_code = nrf_drv_gpiote_in_init(UART_RX, &in_config, NULL);
     APP_ERROR_CHECK(err_code);
 
+#if USE_PPI
+
     err_code =  nrf_drv_ppi_channel_alloc(&ppi_channel);
     APP_ERROR_CHECK(err_code);
 
@@ -145,9 +131,12 @@ static void _on_dfu_start() {
     nrf_drv_gpiote_in_event_enable(UART_RX, false);
     nrf_drv_gpiote_out_task_enable(UART_TX);
 
+#endif
 }
 
 static void _on_dfu_end() {
+
+#if USE_PPI
 
     nrf_drv_gpiote_in_event_enable(UART_RX, false);
     nrf_drv_gpiote_out_task_disable(UART_TX);
@@ -156,6 +145,8 @@ static void _on_dfu_end() {
     APP_ERROR_CHECK(err_code);
 
     nrf_drv_ppi_channel_free(ppi_channel);
+
+#endif
 
     nrf_drv_gpiote_out_clear(LED_PIN);
 
