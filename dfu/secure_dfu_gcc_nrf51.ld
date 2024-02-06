@@ -78,7 +78,9 @@ SECTIONS
 
   .rttSection :
   {
+    PROVIDE(__rttSection_start = .);
     SEGGER_RTT.c.*(.bss._SEGGER_RTT)
+    PROVIDE(__rttSection_end = .);
   } > RTT_CB
 
 } INSERT AFTER .data

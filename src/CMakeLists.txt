@@ -89,3 +89,14 @@ else()
             COMMAND ${NRFJPROG} --reset -f nrf51
     )
 endif(NOT USE_SOFTDEVICE)
+
+find_program(OPENOCD "openocd" HINTS "C:/Tools/OpenOCD-20231002-0.12.0/bin")
+
+add_custom_target(flash_dap
+        DEPENDS ${PROJECT_NAME}.hex
+        # Build app first
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+        #Then program
+        COMMAND ${OPENOCD} -f board/nordic_nrf51_dap.cfg -c "program settings_dfu.hex verify reset exit"
+        COMMAND ${OPENOCD} -f board/nordic_nrf51_dap.cfg -c "program ${PROJECT_NAME}.hex verify reset exit"
+)

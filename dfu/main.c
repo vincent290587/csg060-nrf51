@@ -232,11 +232,27 @@ bool nrf_dfu_enter_check(void)
     return false;
 }
 
+#define DECLARE_SECTION(section)    \
+extern unsigned int __ ## section ## _src, __ ## section ## _dst, __ ## section ## _end;
+#define STARTUP_SECTION(section)    StartupSection(&__ ## section ## _dst, &__ ## section ## _end)
+
+DECLARE_SECTION(rttSection)
+
+static void StartupSection(volatile unsigned int* dst, const unsigned int* dst_end)
+{
+    // Initialize the zero init section
+    for (; dst < dst_end; dst++) {
+        *dst = 0;
+    }
+}
+
 /**@brief Function for application main entry.
  */
 int main(void)
 {
     uint32_t ret_val;
+
+    STARTUP_SECTION(rttSection);
 
     NRF_LOG_INIT(NULL);
 

@@ -97,6 +97,10 @@ add_custom_target(erase
         COMMAND ${NRFJPROG} --eraseall -f nrf51
 )
 
+add_custom_target(erase_dap
+        COMMAND ${OPENOCD} -f board/nordic_nrf51_dap.cfg -c "init; reset halt; nrf51 mass_erase; reset; exit"
+)
+
 add_custom_target(flash_dfu
         DEPENDS ${PROJECT_NAME}.hex
         # Build app first
@@ -104,6 +108,15 @@ add_custom_target(flash_dfu
         #Then program
         COMMAND ${NRFJPROG} --program ${PROJECT_NAME}.elf -f nrf51 --sectorerase --verify
         COMMAND ${NRFJPROG} --reset -f nrf51
+)
+
+add_custom_target(flash_dfu_dap
+        DEPENDS ${PROJECT_NAME}.hex
+        # Build app first
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+        #Then program
+        COMMAND ${OPENOCD} -f board/nordic_nrf51_dap.cfg -c "program C:/Nordic/nRF5_SDK_12.3.0_d7731ad/components/softdevice/s130/hex/s130_nrf51_2.0.1_softdevice.hex verify exit"
+        COMMAND ${OPENOCD} -f board/nordic_nrf51_dap.cfg -c "program ${PROJECT_NAME}.elf verify reset exit"
 )
 
 #add_custom_target(flash_all

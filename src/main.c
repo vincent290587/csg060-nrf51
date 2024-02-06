@@ -189,11 +189,27 @@ static void _wait_func(void) {
 
 }
 
+#define DECLARE_SECTION(section)    \
+extern unsigned int __ ## section ## _start, __ ## section ## _end;
+#define STARTUP_SECTION(section)    StartupSection(&__ ## section ## _start, &__ ## section ## _end)
+
+DECLARE_SECTION(rttSection)
+
+static void StartupSection(volatile unsigned int* dst, const unsigned int* dst_end)
+{
+    // Initialize the zero init section
+    for (; dst < dst_end; dst++) {
+        *dst = 0;
+    }
+}
+
 int main(void)
 {
     _wdt_enable();
 
     os_time__init();
+
+    STARTUP_SECTION(rttSection);
 
     NRF_LOG_INIT(os_get_millis);
 
