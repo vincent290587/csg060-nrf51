@@ -41,8 +41,8 @@ target_link_libraries(${PROJECT_NAME} PRIVATE --specs=nano.specs)
 target_link_libraries(${PROJECT_NAME} PRIVATE nosys)
 target_link_libraries(${PROJECT_NAME} PRIVATE -l:micro_ecc_lib_nrf51.a)
 
-# Add WDT petting in specific functions
 target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--wrap=app_sched_execute)
+# Add WDT petting in specific functions
 target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--wrap=nrf_dfu_flash_erase)
 target_link_libraries(${PROJECT_NAME} PRIVATE -Wl,--wrap=nrf_bootloader_app_start)
 

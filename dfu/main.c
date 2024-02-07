@@ -167,7 +167,6 @@ extern void __real_app_sched_execute();
 void __wrap_app_sched_execute()
 {
     // Transport is waiting for event?
-    while(true)
     {
         if (NRF_WDT->RUNSTATUS) {
             NRF_WDT->RR[0] = WDT_RR_RR_Reload;
