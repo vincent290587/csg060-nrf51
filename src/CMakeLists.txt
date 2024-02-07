@@ -88,6 +88,22 @@ else()
             COMMAND ${NRFJPROG} --program settings_dfu.hex -f nrf51 --sectorerase --verify
             COMMAND ${NRFJPROG} --reset -f nrf51
     )
+
+    add_custom_target(zip
+            DEPENDS ${PROJECT_NAME}.hex
+            # Build app first
+            COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target all
+            # Make zip
+            # nrfutil pkg generate --help
+            COMMAND ${NRFUTIL} pkg generate --hw-version 51 --sd-req 0x87 --application-version 1 --application ${PROJECT_NAME}.hex --key-file ${CMAKE_SOURCE_DIR}/dfu/vault/private.pem ${PROJECT_NAME}.zip
+            COMMAND ${NRFUTIL} pkg display ${PROJECT_NAME}.zip
+    )
+
+    add_custom_target(send_zip
+            DEPENDS zip
+            # Build app first
+            COMMAND ${NRFUTIL} dfu ble -pkg ${PROJECT_NAME}.zip -ic NRF51 -p COM6 -n DfuTarg -f
+    )
 endif(NOT USE_SOFTDEVICE)
 
 find_program(OPENOCD "openocd" HINTS "C:/Tools/OpenOCD-20231002-0.12.0/bin")

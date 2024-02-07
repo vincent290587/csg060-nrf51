@@ -70,6 +70,7 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
 #else
 
     static bool _activate_hack = false;
+    static uint8_t _pas_level = 0;
 
     if (length < 3) {
         const ret_code_t err_code = app_uart_put_buffer(p_buffer, length);
@@ -93,7 +94,21 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
         NRF_LOG_INFO("MAX RPM command detected: upgrading speed\n");
         // Default value is BD hex which is 189 rpm. Wheel diameter for a 700C-38 tire is around 2.18 mtrs
         // This leads to a top speed of 189 * 2.18 * 60 / 1000 kph = 24.7 kph
-        const uint8_t new_buffer[] = {CSG060_CMD__STARTINFO, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27}; // 16h+1Fh+00h+F2h = 27h
+        static uint8_t new_buffer[] = {CSG060_CMD__STARTINFO, CSG060_ARG__MAX_RPM, 0x00, 0xF2, 0x27}; // 16h+1Fh+00h+F2h = 27h
+        switch (_pas_level) {
+            case 2:
+                new_buffer[3] = 0xF2;
+                break;
+            case 3:
+                new_buffer[3] = 0xFE;
+                break;
+            default:
+                new_buffer[3] = 0xBD;
+                break;
+        }
+        // calculate CRC
+        new_buffer[4] = new_buffer[0] + new_buffer[1] + new_buffer[2] + new_buffer[3];
+        // send packet
         ret_code_t err_code = app_uart_put_buffer(new_buffer, sizeof(new_buffer));
         APP_ERROR_CHECK(err_code);
     } else if (p_data->cmd == CSG060_CMD__STARTREQUEST || p_data->cmd == CSG060_CMD__STARTINFO) {
@@ -101,15 +116,24 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
             case CSG060_CMD__LEVEL:
                 NRF_LOG_INFO("CSG060_CMD__LEVEL\n");
                 switch (p_data->payload[0]) {
-                    case 0x02:
-                    //case 0x03:
-                        _activate_hack = true;
-                        break;
-                    default:
-                        _activate_hack = false;
-                        break;
-                }
-                break;
+                        case 0x0C:
+                            _pas_level = 1;
+                            _activate_hack = false;
+                            break;
+                        case 0x02:
+                            _pas_level = 2;
+                            _activate_hack = true;
+                            break;
+                        case 0x03:
+                            _pas_level = 3;
+                            _activate_hack = true;
+                            break;
+                        default:
+                            _pas_level = 0;
+                            _activate_hack = false;
+                            break;
+                    }
+                    break;
             case CSG060_CMD__LIGHT:
                 NRF_LOG_INFO("CSG060_CMD__LIGHT\n");
             break;
