@@ -233,8 +233,8 @@ bool nrf_dfu_enter_check(void)
 }
 
 #define DECLARE_SECTION(section)    \
-extern unsigned int __ ## section ## _src, __ ## section ## _dst, __ ## section ## _end;
-#define STARTUP_SECTION(section)    StartupSection(&__ ## section ## _dst, &__ ## section ## _end)
+extern unsigned int __ ## section ## _src, __ ## section ## _start, __ ## section ## _end;
+#define STARTUP_SECTION(section)    StartupSection(&__ ## section ## _start, &__ ## section ## _end)
 
 DECLARE_SECTION(rttSection)
 
