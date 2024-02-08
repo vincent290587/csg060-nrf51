@@ -25,10 +25,10 @@ endif(USE_QEMU)
 #add_definitions(-DLED_PIN=25)
 #add_definitions(-DLED_PIN_APP=24)
 
-add_definitions(-DUART_RX=2)
-add_definitions(-DUART_TX=3)
-add_definitions(-DLED_PIN=12)
-add_definitions(-DLED_PIN_APP=8)
+add_definitions(-DUART_RX=30)
+add_definitions(-DUART_TX=23)
+add_definitions(-DLED_PIN=3)
+add_definitions(-DLED_PIN_APP=2)
 
 add_subdirectory(config/)
 

@@ -116,24 +116,24 @@ static void _handle_packet(const uint8_t * const p_buffer, size_t length) {
             case CSG060_CMD__LEVEL:
                 NRF_LOG_INFO("CSG060_CMD__LEVEL\n");
                 switch (p_data->payload[0]) {
-                        case 0x0C:
-                            _pas_level = 1;
-                            _activate_hack = false;
-                            break;
-                        case 0x02:
-                            _pas_level = 2;
-                            _activate_hack = true;
-                            break;
-                        case 0x03:
-                            _pas_level = 3;
-                            _activate_hack = true;
-                            break;
-                        default:
-                            _pas_level = 0;
-                            _activate_hack = false;
-                            break;
-                    }
-                    break;
+                    case 0x0C:
+                        _pas_level = 1;
+                        _activate_hack = false;
+                        break;
+                    case 0x02:
+                        _pas_level = 2;
+                        _activate_hack = true;
+                        break;
+                    case 0x03:
+                        _pas_level = 3;
+                        _activate_hack = true;
+                        break;
+                    default:
+                        _pas_level = 0;
+                        _activate_hack = false;
+                        break;
+                }
+                break;
             case CSG060_CMD__LIGHT:
                 NRF_LOG_INFO("CSG060_CMD__LIGHT\n");
             break;
